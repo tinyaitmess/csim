@@ -31,5 +31,5 @@ Where:
 
 ## Programs
 
-* `sample1.elf` -- Switch on the LED when the button is pushed.
+* `sample1.elf` (source `sample1.s`) -- Switch on the LED when the button is pushed.
 
