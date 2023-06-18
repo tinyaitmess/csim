@@ -33,3 +33,4 @@ Where:
 
 * `sample1.elf` (source `sample1.s`) -- Switch on the LED when the button is pushed.
 
+* `sample2.elf` (source `sample2.s`) -- Invert the state of the LEAD each time there is a click (a button push followed by a release).

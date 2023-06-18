@@ -1,9 +1,9 @@
 ARCH=arm-linux-gnueabihf-
 CC=$(ARCH)gcc
-CFLAGS=
+CFLAGS=-g
 LDFLAGS=-nostartfiles -static
 
-all: sample1.elf
+all: sample1.elf sample2.elf
 
-sample1.elf: sample1.s
+%.elf: %.s
 	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS)

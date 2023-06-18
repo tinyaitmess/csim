@@ -200,11 +200,14 @@ void init_console() {
 csim_inst_t *led, *button;
 char buf[256];
 arm_sim_t *sim;
+int buf_size = 1;
 
 void clear_state() {
-	for(int i = 0; buf[i] != '\0'; i++)
+	int i;
+	for(i = 0; buf[i] != '\0'; i++)
 		buf[i] = '\b';
 	fputs(buf, stdout);
+	buf_size = i;
 }
 
 void print_state() {
@@ -216,6 +219,12 @@ void print_state() {
 	arm_inst_t *inst = arm_next_inst(sim);
 	arm_disasm(buf + 17, inst);
 	arm_free_inst(inst);
+	int size = strlen(buf);
+	while(size < buf_size) {
+		buf[size] = ' ';
+		size++;
+	}
+	buf[size] = '\0';
 	fputs(buf, stdout);
 }
 
