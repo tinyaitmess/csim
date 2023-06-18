@@ -1,0 +1,6 @@
+.kdev4
+csim.kdev4
+*.o
+*.a
+test2
+test-csim
