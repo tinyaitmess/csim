@@ -405,7 +405,7 @@ void csim_mute(csim_inst_t *inst, csim_port_t *port) {
  */
 void csim_send_digital(csim_inst_t *inst, csim_port_t *port, int digit) {
 	csim_board_t *b = inst->board;
-	assert(port->type == CSIM_ELECTRIC);
+	assert(port->type == CSIM_DIGITAL);
 
 	/* compute index */
 	int i = port - inst->comp->ports;

@@ -53,7 +53,13 @@ void led_construct(csim_inst_t *inst) {
 
 void led_destruct(csim_inst_t *i) { }
 
+void led_update(csim_port_inst_t *inst, csim_value_type_t type, csim_value_t val) {
+	led_inst_t *i = (led_inst_t *)inst;
+	i->state = val.digital;
+}
+
 csim_port_t led_ports[] = {
+	{ "output", CSIM_DIGITAL, led_update }
 };
 
 void led_write(csim_inst_t *inst, int n, csim_word_t v) {
@@ -126,7 +132,11 @@ csim_reg_t button_regs[] = {
 	{ "R", 0, 4, 1, 1, 0, CSIM_INT, NULL, NULL, button_read, button_write, NULL, NULL }
 };
 
+void button_update(csim_port_inst_t *port, csim_value_type_t type, csim_value_t val) {
+}
+
 csim_port_t button_ports[] = {
+	{ "output", CSIM_DIGITAL, button_update }
 };
 
 
@@ -151,8 +161,12 @@ int button_get(csim_inst_t *inst) {
 
 void button_set(csim_inst_t *inst, int pushed) {
 	button_inst_t *i = (button_inst_t *)inst;
-	i->pushed = pushed;
+	if(pushed != i->pushed) {
+		i->pushed = pushed;
+		csim_send_digital(inst, &button_ports[0], pushed);
+	}
 }
+
 
 /****** Simulator ******/
 void reset_console() {
@@ -164,7 +178,7 @@ void reset_console() {
 	fflush(stdout);
 }
 
-void on_control_c(int) {
+void on_control_c(int x) {
 	reset_console();
 	exit(0);
 }

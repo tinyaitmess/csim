@@ -108,7 +108,7 @@ union csim_value_t {
 struct csim_port_t {
 	const char *name;
 	csim_port_type_t type;
-	void (*update)(csim_port_inst_t *port, csim_value_type_t type, csim_value_t val);
+	void (*update)(csim_port_inst_t *inst, csim_value_type_t type, csim_value_t val);
 };
 
 

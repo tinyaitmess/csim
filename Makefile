@@ -29,7 +29,7 @@ clean:
 	-rm -rf $(OBJECTS) test-csim.o test-csim
 
 distclean: clean
-	-rm -rf test-csim libcsim.a
+	-rm -rf test-csim test2 libcsim.a
 
 test-csim: test-csim.o libcsim.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
@@ -43,3 +43,15 @@ libcsim.a: $(OBJECTS)
 csim.o: csim.h mem.h
 mem.o: mem.h
 test-csim.o: csim.h
+
+FILES = \
+	csim/README.md \
+	csim/Makefile \
+	csim/samples/Makefile \
+	csim/samples/sample1.s \
+	csim/samples/sample1.elf
+
+dist: distclean
+	cd ..; tar cvfz csim.tgz $(FILES) csim/*.c csim/*.h
+
+
