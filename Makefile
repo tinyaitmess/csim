@@ -1,12 +1,13 @@
 
 # Configuration
 WITH_ARMV5T=1
+YAML=$(PWD)/easy-yaml
 
 HEADERS=csim.h
-SOURCES=csim.c
+SOURCES=csim.c yaml.c
 ARMV5T=../armv5t
 
-CFLAGS=-g3 -Wall -fPIC
+CFLAGS=-g3 -Wall -fPIC -I.
 LDFLAGS=-L. -lcsim
 
 # ARMV5T option
@@ -43,6 +44,8 @@ libcsim.a: $(OBJECTS)
 csim.o: csim.h mem.h
 mem.o: mem.h
 test-csim.o: csim.h
+yaml.o: yaml.h
+test2.o: csim.h mem.h yaml.h
 
 FILES = \
 	csim/README.md \
