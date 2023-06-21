@@ -4,7 +4,7 @@ WITH_ARMV5T=1
 YAML=$(PWD)/easy-yaml
 
 HEADERS=csim.h
-SOURCES=csim.c yaml.c
+SOURCES=csim.c yaml.c led.c button.c
 ARMV5T=../armv5t
 
 CFLAGS=-g3 -Wall -fPIC -I.
@@ -45,7 +45,10 @@ csim.o: csim.h mem.h
 mem.o: mem.h
 test-csim.o: csim.h
 yaml.o: yaml.h
-test2.o: csim.h mem.h yaml.h
+test2.o: csim.h mem.h yaml.h led.h button.h
+led.o: led.h csim.h
+button.o: button.h csim.h
+
 
 FILES = \
 	csim/README.md \

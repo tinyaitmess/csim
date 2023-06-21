@@ -35,140 +35,10 @@
 #include <arm/api.h>
 #include <arm/loader.h>
 
+#include "led.h"
+#include "button.h"
+
 #define INST_SLICE	10
-
-/****** LED ******/
-
-typedef struct led_inst_t {
-	csim_inst_t inst;
-	int state;
-} led_inst_t;
-
-void led_reset(csim_inst_t *inst) {
-	led_inst_t *i = (led_inst_t *)inst;
-	i->state = 0;
-}
-
-void led_construct(csim_inst_t *inst) {
-	led_reset(inst);
-}
-
-void led_destruct(csim_inst_t *i) { }
-
-void led_update(csim_port_inst_t *inst, csim_value_type_t type, csim_value_t val) {
-	led_inst_t *i = (led_inst_t *)inst;
-	i->state = val.digital;
-}
-
-csim_port_t led_ports[] = {
-	{ "output", CSIM_DIGITAL, led_update }
-};
-
-void led_write(csim_inst_t *inst, int n, csim_word_t v) {
-	led_inst_t *i = (led_inst_t *)inst;
-	i->state = v;
-	inst->board->log(inst->board, CSIM_INFO, "led_write(%d, %d)", n, v);
-}
-
-csim_word_t led_read(csim_inst_t *inst, int n) {
-	led_inst_t *i = (led_inst_t *)inst;
-	inst->board->log(inst->board, CSIM_INFO, "led_read(%d)", n);
-	return i->state;
-}
-
-csim_reg_t led_regs[] = {
-	{ "R", 0, 4, 1, 1, 0, CSIM_INT, NULL, NULL, led_read, led_write, NULL, NULL }
-};
-
-csim_component_t led_component = {
-	"led",
-	CSIM_SIMPLE,
-	1,
-	led_regs,
-	1,
-	led_ports,
-	0,
-	sizeof(led_inst_t),
-	led_construct,
-	led_destruct,
-	led_reset,
-	NULL
-};
-
-int led_state(csim_inst_t *inst) {
-	led_inst_t *i = (led_inst_t *)inst;
-	return i->state;
-}
-
-
-/****** Button ******/
-
-typedef struct button_inst_t {
-	csim_inst_t inst;
-	int pushed;
-} button_inst_t;
-
-void button_reset(csim_inst_t *inst) {
-	button_inst_t *i = (button_inst_t *)inst;
-	i->pushed = 0;
-}
-
-void button_construct(csim_inst_t *inst) {
-	button_reset(inst);
-}
-
-void button_destruct(csim_inst_t *c) {
-}
-
-void button_write(csim_inst_t *inst, int n, csim_word_t v) {
-	inst->board->log(inst->board, CSIM_INFO, "button_write(%d, %d)", n, v);
-}
-
-csim_word_t button_read(csim_inst_t *inst, int n) {
-	button_inst_t *i = (button_inst_t *)inst;
-	inst->board->log(inst->board, CSIM_INFO, "button_read(%d)", n);
-	return i->pushed;
-}
-
-csim_reg_t button_regs[] = {
-	{ "R", 0, 4, 1, 1, 0, CSIM_INT, NULL, NULL, button_read, button_write, NULL, NULL }
-};
-
-void button_update(csim_port_inst_t *port, csim_value_type_t type, csim_value_t val) {
-}
-
-csim_port_t button_ports[] = {
-	{ "output", CSIM_DIGITAL, button_update }
-};
-
-
-csim_component_t button_component = {
-	"button",
-	CSIM_SIMPLE,
-	1,
-	button_regs,
-	1,
-	button_ports,
-	1,
-	sizeof(button_inst_t),
-	button_construct,
-	button_destruct,
-	button_reset
-};
-
-int button_get(csim_inst_t *inst) {
-	button_inst_t *i = (button_inst_t *)inst;
-	return i->pushed;
-}
-
-void button_set(csim_inst_t *inst, int pushed) {
-	button_inst_t *i = (button_inst_t *)inst;
-	if(pushed != i->pushed) {
-		i->pushed = pushed;
-		csim_send_digital(inst, &button_ports[0], pushed);
-	}
-}
-
 
 /****** Board ******/
 
@@ -511,6 +381,7 @@ int main(int argc, const char *argv[]) {
 		board.board = csim_new_board("default", arm_get_memory(pf, ARM_MAIN_MEMORY));
 		add_led(&board, csim_new_component(board.board, &led_component, "led", 0xA0000000));
 		add_button(&board, csim_new_component(board.board, &button_component, "button", 0xB0000000), 'a');
+		board.board->level = CSIM_ERROR;
 	}
 
 	// initialize input
