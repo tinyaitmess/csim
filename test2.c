@@ -43,68 +43,81 @@
 /****** Board ******/
 
 csim_component_t *comps[32] = {
-	&led_component,
-	&button_component,
+	&led_component.comp,
+	&button_component.comp,
 	NULL
 };
-
-typedef struct {
-	csim_board_t *board;
-	csim_inst_t *leds[16];
-	int led_cnt;
-	struct {
-		csim_inst_t *but;
-		char key;
-	} buts[16];
-	int but_cnt;
-} board_t;
 
 typedef struct {
 	enum {
 		TOP,
 		IN_COMPS,
-		IN_COMP
+		IN_COMP,
+		IN_CONNECT,
+		IN_LINK
 	} state;
-	board_t *board;
+	csim_board_t *board;
 	csim_memory_t *mem;
 	const char *name, *type;
 	char key;
 	arm_address_t base;
+	csim_inst_t *from_inst, *to_inst;
+	csim_port_t *from_port, *to_port;
+	int conf_cnt;
+	char *confs[32];
 } loader_t;
 
 int VERBOSE = 0;
 
 /**
- * Free resources used by the board..
+ * Scan a port in the form INSTANCE.PORT.
+ * @param loader	Current loader.
+ * @param val		YAML value to scan.
+ * @param inst		Result instance.
+ * @param port		Result port.
+ * @return			Next action for YAML.
  */
-void finish_board(board_t *board) {
-	csim_delete_board(board->board);
+yaml_next_t scan_port(loader_t *loader, const char *val, csim_inst_t **inst, csim_port_t **port) {
+	if(*inst != NULL)
+		return YAML_ERROR;
+
+	// find '.'
+	char buf[64];
+	strncpy(buf, val, 64);
+	char *p = strchr(buf, '.');
+	if(p == NULL) {
+		fprintf(stderr, "ERROR: '.' is missing.\n");
+		return YAML_ERROR;
+	}
+	*p = '\0';
+
+	// find instance
+	for(csim_inst_t *i = loader->board->insts; i != NULL; i = i->next)
+		if(strcmp(i->name, buf) == 0) {
+			*inst = i;
+			break;
+		}
+	if(*inst == NULL) {
+		fprintf(stderr, "ERROR: cannot find instance %s.\n", buf);
+		return YAML_ERROR;
+	}
+
+	// find port
+	for(unsigned i = 0; i < (*inst)->comp->port_cnt; i++) {
+		if(strcmp(p + 1, (*inst)->comp->ports[i].name) == 0) {
+			*port = &(*inst)->comp->ports[i];
+			break;
+		}
+	}
+	if(*port == NULL) {
+		fprintf(stderr, "ERROR: cannot find port %s.\n", p +1);
+		return YAML_ERROR;
+	}
+
+	// all is fine
+	return  YAML_DONE;
 }
 
-/**
- * Initialize a board.
- * @return		Empty board.
- */
-void init_board(board_t *board) {
-	board->led_cnt = 0;
-	board->but_cnt = 0;
-	board->board = NULL;
-}
-
-/**
- * Add a LED to the board.
- */
-void add_led(board_t *board, csim_inst_t *inst) {
-	board->leds[board->led_cnt++] = inst;
-}
-
-/**
- * Add a button to the board.
- */
-void add_button(board_t *board, csim_inst_t *inst, char key) {
-	board->buts[board->but_cnt].but = inst;
-	board->buts[board->but_cnt++].key = key;
-}
 
 ///
 static yaml_next_t on_key(const char *key, const char *val, void *data) {
@@ -117,10 +130,14 @@ static yaml_next_t on_key(const char *key, const char *val, void *data) {
 			return YAML_DONE;
 		}
 		else if(strcmp(key, "components") == 0) {
-			loader->board->board = csim_new_board(loader->name, loader->mem);
-			loader->board->board->level = CSIM_ERROR;
+			loader->board = csim_new_board(loader->name, loader->mem);
+			loader->board->level = CSIM_ERROR;
 			loader->state = IN_COMPS;
 			return YAML_MAP;
+		}
+		else if(strcmp(key, "connect") == 0) {
+			loader->state = IN_CONNECT;
+			return YAML_LIST;
 		}
 		break;
 
@@ -138,14 +155,33 @@ static yaml_next_t on_key(const char *key, const char *val, void *data) {
 			sscanf(val, "%x", &loader->base);
 			return YAML_DONE;
 		}
-		else if(strcmp(key, "key") == 0) {
-			sscanf(val, "%c", &loader->key);
+		else {
+			loader->confs[loader->conf_cnt++] = strdup(key);
+			loader->confs[loader->conf_cnt++] = strdup(val);
 			return YAML_DONE;
 		}
+		break;
+
+	case IN_LINK:
+		if(strcmp(key, "from"))
+			return scan_port(loader, val, &loader->from_inst, &loader->from_port);
+		else if(strcmp(key, "to"))
+			return scan_port(loader, val, &loader->to_inst, &loader->to_port);
+		break;
+
+	default:
 		break;
 	}
 	return YAML_ERROR;
 }
+
+
+static yaml_next_t on_item(const char *val, void *data) {
+	loader_t *loader = (loader_t *)data;
+	loader->state = IN_LINK;
+	return YAML_MAP;
+}
+
 
 ///
 static void on_end(void *data) {
@@ -173,17 +209,29 @@ static void on_end(void *data) {
 			}
 
 			/* buiild the component */
-			csim_inst_t *inst = csim_new_component(loader->board->board, type, loader->name, loader->base);
-			if(type == comps[0])
-				add_led(loader->board, inst);
-			else if(type == comps[1])
-				add_button(loader->board, inst, loader->key);
+			loader->confs[loader->conf_cnt] = NULL;
+			csim_new_component_ext(loader->board, type, loader->name, loader->base, loader->confs);
+			for(int i = 0; i < loader->conf_cnt; i++)
+				free(loader->confs[i]);
+
 			loader->state = IN_COMPS;
 		}
 		break;
 
 	case IN_COMPS:
 		loader->state = TOP;
+		break;
+
+	case IN_LINK:
+		csim_connect(loader->from_inst, loader->from_port, loader->to_inst, loader->to_port);
+		loader->from_inst = NULL;
+		loader->from_port = NULL;
+		loader->to_inst = NULL;
+		loader->to_port = NULL;
+		loader->state = IN_CONNECT;
+		break;
+
+	default:
 		break;
 	}
 }
@@ -192,22 +240,27 @@ static void on_end(void *data) {
  * Load the content of a board from given file.
  *
  * In case of error, display it and stop the program.
- * @param board		Board to initialize.
  * @param path		Path to read board from.
  * @param mem		Memory to use for I/O registers.
+ * @return			Created board.
  */
-void load_board(board_t *board, const char *path, csim_memory_t *mem) {
-	init_board(board);
-	loader_t loader = { TOP, board, mem, "anonymous", NULL, '\0', 0 };
+csim_board_t *load_board(const char *path, csim_memory_t *mem) {
+	loader_t loader = {
+		TOP, NULL, mem, "anonymous", NULL, '\0', 0,
+		NULL, NULL, NULL, NULL,
+		0, { NULL }
+	};
 	yaml_handler_t handler;
 	yaml_init_handler(&handler);
 	handler.on_key = on_key;
+	handler.on_item = on_item;
 	handler.on_end = on_end;
 	int num = yaml_parse(&handler, path, &loader);
 	if(num != 0) {
 		fprintf(stderr, "ERROR:%s:%d: syntax error.\n", path, num);
 		exit(1);
 	}
+	return loader.board;
 }
 
 
@@ -238,46 +291,47 @@ void init_console() {
 }
 
 //csim_inst_t *led, *button;
-char buf[256] = "";
 arm_sim_t *sim;
 
 
 /**
  * Print the state.
  */
-void print_state(board_t *board, int clear) {
-	int buf_size;
+void print_state(csim_board_t *board, int clear) {
+	static char buf[256] = "";
+	static char cbuf[256];
+	static int buf_size = 0;
 
+	// move back to the start of the line
 	if(clear) {
-		for(buf_size = 0; buf[buf_size] != '\0'; buf_size++)
-			buf[buf_size] = '\b';
-		fputs(buf, stdout);
+		memset(cbuf, '\b', buf_size);
+		cbuf[buf_size] = '\0';
+		fputs(cbuf, stdout);
 	}
 
+	// generate the content
 	char *p = buf;
-	for(int i = 0; i < board->led_cnt; i++)
-		p += sprintf(p, "[%c] ", led_state(board->leds[i]) ? '*' : ' ');
-	for(int i = 0; i < board->but_cnt; i++) {
-		int pushed = button_get(board->buts[i].but);
-		p += sprintf(p, "%c%c%c ",
-				(pushed ? ')' : '('),
-				board->buts[i].key,
-				(pushed ? '(' : ')')
-			);
+	for(csim_iocomp_inst_t *i = board->iocomps; i != NULL; i = i->next) {
+		p += ((csim_iocomp_t *)(i->inst.comp))->display(p, i);
+		*p++ = ' ';
 	}
+
+	// generate the instruction
 	p += sprintf(p, "%08x ", arm_next_addr(sim));
 	arm_inst_t *inst = arm_next_inst(sim);
 	arm_disasm(p, inst);
 	arm_free_inst(inst);
 
+	// compute the size
+	int size = p - buf + strlen(p);
 	if(clear) {
-		int size = strlen(buf);
 		while(size < buf_size) {
 			buf[size] = ' ';
 			size++;
 		}
 		buf[size] = '\0';
 	}
+	buf_size = size;
 
 	fputs(buf, stdout);
 }
@@ -364,7 +418,7 @@ int main(int argc, const char *argv[]) {
 	sim = arm_new_sim(state, _start, _exit);
 
 	/* build the board */
-	board_t board;
+	csim_board_t *board;
 	int l = strlen(argv[1]);
 	char path[256];
 	if(strcmp(".elf", argv[1] + l - 4) == 0) {
@@ -375,13 +429,12 @@ int main(int argc, const char *argv[]) {
 		strcpy(path, argv[1]);
 	strcat(path, ".yaml");
 	if(access(path, R_OK) == 0)
-		load_board(&board, path, arm_get_memory(pf, ARM_MAIN_MEMORY));
+		board = load_board(path, arm_get_memory(pf, ARM_MAIN_MEMORY));
 	else {
-		init_board(&board);
-		board.board = csim_new_board("default", arm_get_memory(pf, ARM_MAIN_MEMORY));
-		add_led(&board, csim_new_component(board.board, &led_component, "led", 0xA0000000));
-		add_button(&board, csim_new_component(board.board, &button_component, "button", 0xB0000000), 'a');
-		board.board->level = CSIM_ERROR;
+		board = csim_new_board("default", arm_get_memory(pf, ARM_MAIN_MEMORY));
+		csim_new_component(board, &led_component.comp, "led", 0xA0000000);
+		csim_new_component(board, &button_component.comp, "button", 0xB0000000);
+		board->level = CSIM_ERROR;
 	}
 
 	// initialize input
@@ -392,11 +445,11 @@ int main(int argc, const char *argv[]) {
 	init_console();
 
 	// perform I/O
-	print_state(&board, 0);
+	print_state(board, 0);
 	while(1) {
 
 		// update display
-		print_state(&board, 1);
+		print_state(board, 1);
 
 		// get the key
 		FD_ZERO(&set);
@@ -405,9 +458,8 @@ int main(int argc, const char *argv[]) {
 		if(n != 0) {
 			char key;
 			read(0, &key, 1);
-			for(int i = 0; i < board.but_cnt; i++)
-				if(key == board.buts[i].key)
-					button_set(board.buts[i].but, !button_get(board.buts[i].but));
+			for(csim_iocomp_inst_t *i = board->iocomps; i != NULL; i = i->next)
+				((csim_iocomp_t *)i->inst.comp)->on_key(key, i);
 		}
 
 		// simulate the code
@@ -415,7 +467,7 @@ int main(int argc, const char *argv[]) {
 			arm_step(sim);
 
 		// run the board
-		csim_run(board.board, 1);
+		csim_run(board, 1);
 	}
 	return 0;
 }

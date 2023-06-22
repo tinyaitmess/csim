@@ -3,7 +3,7 @@
 
 #include "csim.h"
 
-extern csim_component_t button_component;
+extern csim_iocomp_t button_component;
 
 int button_get(csim_inst_t *inst);
 void button_set(csim_inst_t *inst, int pushed);

@@ -6,4 +6,8 @@ components
   BUTTON
     type: button
     base: B0000000
-    key: a
+    key: b
+connect
+  -
+    from: BUTTON.output
+    to: LED.input

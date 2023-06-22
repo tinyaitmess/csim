@@ -3,7 +3,7 @@
 
 #include "csim.h"
 
-extern csim_component_t led_component;
+extern csim_iocomp_t led_component;
 
 int led_state(csim_inst_t *inst);
 

@@ -204,6 +204,7 @@ csim_board_t *csim_new_board(const char *name, csim_memory_t *mem) {
 	board->name = name;
 	board->insts = NULL;
 	board->cores = NULL;
+	board->iocomps = NULL;
 	board->clock = 0;
 	board->date = 0;
 	board->evts = 0;
@@ -247,9 +248,23 @@ void csim_delete_board(csim_board_t *board) {
  * @param comp	Component to build an instance for.
  * @param name	Name of the instance.
  * @param base	Base adress of the instance.
- * @return		Built instance.	
+ * @return		Built instance.
  */
 csim_inst_t *csim_new_component(csim_board_t *board, csim_component_t *comp, const char *name, csim_addr_t base) {
+	csim_confs_t confs = { NULL };
+	return csim_new_component_ext(board, comp, name, base, confs);
+}
+
+
+/**
+ * Build a new instance of the given component and add it to the board.
+ * @param board	Board to add to.
+ * @param comp	Component to build an instance for.
+ * @param name	Name of the instance.
+ * @param base	Base adress of the instance.
+ * @return		Built instance.	
+ */
+csim_inst_t *csim_new_component_ext(csim_board_t *board, csim_component_t *comp, const char *name, csim_addr_t base, csim_confs_t confs) {
 	
 	/* build the instance */
 	uint8_t *p = (uint8_t *)malloc(comp->size + comp->port_cnt * sizeof(csim_port_inst_t));
@@ -280,6 +295,13 @@ csim_inst_t *csim_new_component(csim_board_t *board, csim_component_t *comp, con
 				board->log(board, CSIM_FATAL, "ERROR: current version only supports multiple core with same clock.");
 		}
 	}
+
+	/* If IO component, record it in the IO list. */
+	if(comp->type == CSIM_IO) {
+		csim_iocomp_inst_t *ioi = (csim_iocomp_inst_t *)i;
+		ioi->next = board->iocomps;
+		board->iocomps = ioi;
+	}
 	
 	/* record the IO registers */
 	for(int j = 0; j < comp->reg_cnt; j++)
@@ -288,7 +310,7 @@ csim_inst_t *csim_new_component(csim_board_t *board, csim_component_t *comp, con
 	/* call preparation of the instance */
 	if(CSIM_DEBUG >=board->level)
 		board->log(board, CSIM_INFO, "new instance %s of %s at %08x", name, comp->name, name);
-	comp->construct(i);
+	comp->construct(i, confs);
 	return i;
 }
 

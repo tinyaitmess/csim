@@ -22,6 +22,7 @@
 #define GLISS2_CSIM_H
 
 #include "mem.h"
+#include <stdio.h>
 #include <stdint.h>
 
 #define CSIM_READ	0x0001
@@ -56,7 +57,8 @@ typedef uint8_t csim_value_type_t;
 typedef enum csim_ctype_t {
 	CSIM_NOCTYPE = 0,
 	CSIM_SIMPLE,
-	CSIM_CORE
+	CSIM_CORE,
+	CSIM_IO
 } csim_ctype_t;
 
 typedef enum csim_level_t {
@@ -79,6 +81,8 @@ typedef struct csim_core_t csim_core_t;
 typedef void (*csim_callback_t)(csim_addr_t addr, int size, void *data, int type_access, void *cdata);
 //typedef struct csim_memory_t csim_memory_t;
 typedef struct csim_inst_t csim_inst_t;
+typedef struct csim_iocomp_t csim_iocomp_t;
+typedef struct csim_iocomp_inst_t csim_iocomp_inst_t;
 typedef struct csim_port_inst_t csim_port_inst_t;
 typedef union csim_value_t csim_value_t;
 
@@ -127,6 +131,8 @@ struct csim_evt_t {
 	void (*trigger)(csim_evt_t *evt);
 };
 
+typedef char *csim_confs_t[];
+
 struct csim_component_t {
 	const char *name;
 	csim_ctype_t type;
@@ -136,7 +142,7 @@ struct csim_component_t {
 	csim_port_t *ports;
 	int port_cnt;
 	csim_size_t size;
-	void (*construct)(csim_inst_t *inst);
+	void (*construct)(csim_inst_t *inst, csim_confs_t confs);
 	void (*destruct)(csim_inst_t *inst);
 	void (*reset)(csim_inst_t *inst);
 	csim_core_t *core;
@@ -159,6 +165,19 @@ struct csim_core_t {
 	void (*step)(csim_core_t *comp);
 };
 
+
+struct csim_iocomp_t {
+	csim_component_t comp;
+	int (*display)(char *buf, csim_iocomp_inst_t *inst);
+	void (*on_key)(char key, csim_iocomp_inst_t *inst);
+};
+
+struct csim_iocomp_inst_t {
+	csim_inst_t inst;
+	struct csim_iocomp_inst_t *next;
+};
+
+
 #ifndef CSIM_IO_SHIFT
 #	define CSIM_IO_SHIFT	2
 #endif
@@ -178,6 +197,7 @@ struct csim_board_t {
 	const char *name;
 	csim_inst_t *insts;
 	csim_inst_t *cores;
+	csim_iocomp_inst_t *iocomps;
 	csim_clock_t clock;
 	csim_date_t date;
 	csim_evt_t *evts;
@@ -193,6 +213,7 @@ const char *csim_unit_name(csim_port_type_t type);
 csim_board_t *csim_new_board(const char *name, csim_memory_t *mem);
 void csim_delete_board(csim_board_t *board);
 csim_inst_t *csim_new_component(csim_board_t *board, csim_component_t *comp, const char *name, csim_addr_t base);
+csim_inst_t *csim_new_component_ext(csim_board_t *board, csim_component_t *comp, const char *name, csim_addr_t base, csim_confs_t confs);
 void csim_delete_component(csim_inst_t *inst);
 void csim_log(csim_board_t *board, csim_level_t level, const char *msg, ...);
 

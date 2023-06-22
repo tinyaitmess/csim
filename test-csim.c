@@ -44,7 +44,7 @@ csim_evt_t e1 = {
 	e1_trigger
 };
 
-void c1_construct(csim_inst_t *i) {
+void c1_construct(csim_inst_t *i, csim_confs_t confs) {
 	e1.inst = i;
 	csim_record_event(i->board, &e1);
 }
@@ -90,7 +90,7 @@ csim_component_t c1 = {
 
 extern csim_component_t c2;
 
-void c2_construct(csim_inst_t *c) {
+void c2_construct(csim_inst_t *c, csim_confs_t confs) {
 }
 
 void c2_destruct(csim_inst_t *c) {

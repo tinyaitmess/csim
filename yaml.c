@@ -9,7 +9,7 @@ static yaml_next_t yaml_on_key(const char *key, const char *value, void *data) {
 }
 
 ///
-static yaml_next_t yaml_on_value(const char *value, void *data) {
+static yaml_next_t yaml_on_item(const char *value, void *data) {
 	return YAML_ERROR;
 }
 
@@ -32,7 +32,7 @@ static void yaml_on_error(const char *msg, void *data) {
  */
 void yaml_init_handler(yaml_handler_t *handler) {
 	handler->on_key = yaml_on_key;
-	handler->on_value = yaml_on_value;
+	handler->on_item = yaml_on_item;
 	handler->on_end = yaml_on_end;
 	handler->on_error = yaml_on_error;
 }
@@ -121,7 +121,7 @@ int yaml_parse(yaml_handler_t *handler, const char *path, void *data) {
 					next = YAML_ERROR;
 				}
 				else
-					next = handler->on_value(p + 2, data);
+					next = handler->on_item(p + 2, data);
 			}
 			break;
 
