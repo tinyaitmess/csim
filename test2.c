@@ -341,6 +341,7 @@ void print_state(csim_board_t *board, int clear) {
  */
 void print_help() {
 	fprintf(stderr, "SYNTAX: test2 FICHIER.elf\n");
+	fprintf(stderr, "\t-b, -board: select the board descriptor to use.\n");
 	fprintf(stderr, "\t-h, -help: displays help message.\n");
 	fprintf(stderr, "\t-v: verbose mode.\n");
 }
@@ -349,7 +350,7 @@ void print_help() {
  * Application entry.
  */
 int main(int argc, const char *argv[]) {
-	const char *exec = NULL;
+	const char *exec = NULL, *board_path = NULL;
 
 	/* parse arguments */
 	for(int i = 1; i < argc; i++) {
@@ -365,6 +366,15 @@ int main(int argc, const char *argv[]) {
 		else if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "-help") == 0) {
 			print_help();
 			exit(0);
+		}
+		else if(strcmp(argv[i], "-b") == 0 || strcmp(argv[i], "-board") == 0) {
+			i++;
+			if(i >= argc) {
+				print_help();
+				fprintf(stderr, "ERROR: -b, -board requires an argument.\n");
+				exit(1);
+			}
+			board_path = argv[i];
 		}
 		else if(strcmp(argv[i], "-v") == 0)
 			VERBOSE = 1;
@@ -419,23 +429,28 @@ int main(int argc, const char *argv[]) {
 
 	/* build the board */
 	csim_board_t *board;
-	int l = strlen(argv[1]);
 	char path[256];
-	if(strcmp(".elf", argv[1] + l - 4) == 0) {
-		strncpy(path, argv[1], l-4);
-		path[l-4] = '\0';
+	if(board_path == NULL) {
+		int l = strlen(argv[1]);
+		if(strcmp(".elf", argv[1] + l - 4) == 0) {
+			strncpy(path, argv[1], l-4);
+			path[l-4] = '\0';
+		}
+		else
+			strcpy(path, argv[1]);
+		strcat(path, ".yaml");
+		if(access(path, R_OK) == 0)
+			board_path = path;
 	}
-	else
-		strcpy(path, argv[1]);
-	strcat(path, ".yaml");
-	if(access(path, R_OK) == 0)
-		board = load_board(path, arm_get_memory(pf, ARM_MAIN_MEMORY));
-	else {
+	if(board_path == NULL) {
+		char *confs[] = { "key", "a", NULL };
 		board = csim_new_board("default", arm_get_memory(pf, ARM_MAIN_MEMORY));
 		csim_new_component(board, &led_component.comp, "led", 0xA0000000);
-		csim_new_component(board, &button_component.comp, "button", 0xB0000000);
+		csim_new_component_ext(board, &button_component.comp, "button", 0xB0000000, confs);
 		board->level = CSIM_ERROR;
 	}
+	else
+		board = load_board(board_path, arm_get_memory(pf, ARM_MAIN_MEMORY));
 
 	// initialize input
 	fd_set set;
