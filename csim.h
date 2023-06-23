@@ -76,6 +76,7 @@ typedef struct csim_port_t csim_port_t;
 typedef struct csim_evt_t csim_evt_t;
 typedef struct csim_board_t csim_board_t;
 typedef struct csim_core_t csim_core_t;
+typedef struct csim_core_inst_t csim_core_inst_t;
 #define CSIM_MEM_READ	0
 #define CSIM_MEM_WRITE	1
 typedef void (*csim_callback_t)(csim_addr_t addr, int size, void *data, int type_access, void *cdata);
@@ -109,6 +110,8 @@ union csim_value_t {
 	char serial;
 };
 
+/* ports */
+
 struct csim_port_t {
 	const char *name;
 	csim_port_type_t type;
@@ -123,6 +126,8 @@ struct csim_port_inst_t {
 };
 
 
+/* events */
+
 struct csim_evt_t {
 	struct csim_evt_t *next, *prev;
 	csim_date_t date;
@@ -130,6 +135,9 @@ struct csim_evt_t {
 	csim_inst_t *inst;
 	void (*trigger)(csim_evt_t *evt);
 };
+
+
+/* component */
 
 typedef char *csim_confs_t[];
 
@@ -145,7 +153,6 @@ struct csim_component_t {
 	void (*construct)(csim_inst_t *inst, csim_confs_t confs);
 	void (*destruct)(csim_inst_t *inst);
 	void (*reset)(csim_inst_t *inst);
-	csim_core_t *core;
 };
 
 struct csim_inst_t {
@@ -159,13 +166,20 @@ struct csim_inst_t {
 };
 
 
+/* core component */
 struct csim_core_t {
-	csim_component_t *comp;
+	csim_component_t comp;
 	csim_clock_t clock;
-	void (*step)(csim_core_t *comp);
+	void (*step)(csim_core_inst_t *comp);
+};
+
+struct csim_core_inst_t {
+	csim_inst_t inst;
+	struct csim_core_inst_t *next;
 };
 
 
+/* I/O component */
 struct csim_iocomp_t {
 	csim_component_t comp;
 	int (*display)(char *buf, csim_iocomp_inst_t *inst);
@@ -178,6 +192,7 @@ struct csim_iocomp_inst_t {
 };
 
 
+/* board */
 #ifndef CSIM_IO_SHIFT
 #	define CSIM_IO_SHIFT	2
 #endif
@@ -196,7 +211,7 @@ typedef struct csim_io_t {
 struct csim_board_t {
 	const char *name;
 	csim_inst_t *insts;
-	csim_inst_t *cores;
+	csim_core_inst_t *cores;
 	csim_iocomp_inst_t *iocomps;
 	csim_clock_t clock;
 	csim_date_t date;

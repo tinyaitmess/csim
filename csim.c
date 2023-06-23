@@ -285,13 +285,15 @@ csim_inst_t *csim_new_component_ext(csim_board_t *board, csim_component_t *comp,
 	board->insts = i;
 
 	/* if core, record it in core list */
-	if(comp->core != NULL) {
-		i->next_core = board->cores;
-		board->cores = i;
+	if(comp->type == CSIM_CORE) {
+		csim_core_inst_t *ci = (csim_core_inst_t *)i;
+		csim_core_t *cc = (csim_core_t *)comp;
+		ci->next = board->cores;
+		board->cores = ci;
 		if(board->clock == 0)
-			board->clock = comp->core->clock;
+			board->clock = cc->clock;
 		else {
-			if(board->clock != comp->core->clock)
+			if(board->clock != cc->clock)
 				board->log(board, CSIM_FATAL, "ERROR: current version only supports multiple core with same clock.");
 		}
 	}
@@ -527,10 +529,10 @@ void csim_run(csim_board_t *board, csim_time_t time) {
 			}
 		}
 		
-		csim_inst_t *core = board->cores;
+		csim_core_inst_t *core = board->cores;
 		while(core != NULL) {
-			core->comp->core->step(core->comp->core);
-			core = core->next_core;
+			((csim_core_t *)core->inst.comp)->step(core);
+			core = core->next;
 		}
 		
 		board->date++;

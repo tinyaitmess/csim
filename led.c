@@ -64,8 +64,7 @@ csim_iocomp_t led_component = {
 		sizeof(led_inst_t),
 		led_construct,
 		led_destruct,
-		led_reset,
-		NULL
+		led_reset
 	},
 	led_display,
 	led_on_key

@@ -81,8 +81,7 @@ csim_component_t c1 = {
 	sizeof(csim_inst_t),
 	c1_construct,
 	c1_destruct,
-	c1_reset,
-	NULL
+	c1_reset
 };
 
 
