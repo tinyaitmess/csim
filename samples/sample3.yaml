@@ -1,0 +1,19 @@
+name: sample3
+components
+  LED0
+    type: led
+    base: A0000000
+  LED1
+    type: led
+    base: A0010000
+  LED2
+    type: led
+    base: A0020000
+  LED3
+    type: led
+    base: A0030000
+  BUTTON
+    type: button
+    base: B0000000
+    key: x
+

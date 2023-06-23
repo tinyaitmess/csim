@@ -341,7 +341,7 @@ void print_state(csim_board_t *board, int clear) {
  */
 void print_help() {
 	fprintf(stderr, "SYNTAX: test2 FICHIER.elf\n");
-	fprintf(stderr, "\t-b, -board: select the board descriptor to use.\n");
+	fprintf(stderr, "\t-b, -board BOARD-PATH: select the board descriptor to use.\n");
 	fprintf(stderr, "\t-h, -help: displays help message.\n");
 	fprintf(stderr, "\t-v: verbose mode.\n");
 }
