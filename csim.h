@@ -21,9 +21,13 @@
 #ifndef GLISS2_CSIM_H
 #define GLISS2_CSIM_H
 
-#include "mem.h"
+//#include "mem.h"
 #include <stdio.h>
 #include <stdint.h>
+
+#ifndef CSIM_INSIDE
+	typedef void *csim_memory_t;
+#endif
 
 #define CSIM_READ	0x0001
 #define CSIM_WRITE	0x0002
@@ -95,8 +99,8 @@ struct csim_reg_t {
 	uint32_t stride;
 	uint32_t flags;
 	csim_rtype_t type;
-	void (*make_name)(int num, char buf, int size);
-	void (*display)(csim_inst_t *inst, int num, char buf, int size);
+	void (*make_name)(csim_inst_t *inst, int num, char *buf, int size);
+	void (*display)(csim_inst_t *inst, int num, char *buf, int size);
 	csim_word_t (*read)(csim_inst_t *inst, int num);
 	void (*write)(csim_inst_t *inst, int num, csim_word_t val);
 	csim_word_t (*get)(csim_inst_t *inst, int num);
@@ -161,6 +165,7 @@ struct csim_inst_t {
 	struct csim_component_t *comp;
 	csim_addr_t base;
 	const char *name;
+	int number;
 	csim_board_t *board;
 	csim_port_inst_t *ports;
 };

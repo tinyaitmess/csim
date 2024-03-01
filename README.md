@@ -8,7 +8,28 @@ To compile it, you need a compiled version of ARMv5T compiled in a directory in 
 
 Then type the command:
 
+```sh
 	$ make
+```
+
+To get ARMV5T, you have to first get GLISS2 (OCAML is required):
+
+```sh
+	$ git clone https://git.renater.fr/anonscm/git/gliss2/gliss2.git
+	$ cd gliss2
+	$ make
+```
+
+Then you can retrieve and compiole `armv5r` :
+
+```sh
+	$ git clone https://git.renater.fr/anonscm/git/gliss2/armv5t.git
+	$ cd armv5t
+	$ make
+```
+
+**These directories have to be unpacked in the same parent directory.**
+
 
 
 ## Using it

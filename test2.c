@@ -29,8 +29,10 @@
 #include <unistd.h>
 #include <sys/select.h>
 
-#include "csim.h"
+#define CSIM_INSIDE
 #include "mem.h"
+#include "csim.h"
+
 #include "yaml.h"
 #include <arm/api.h>
 #include <arm/loader.h>

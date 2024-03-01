@@ -1,5 +1,14 @@
 #include "led.h"
 
+/**
+ * @defgroup led LED Component
+ *
+ * Represent a LED with a ON/OFF behaviour.
+ *
+ * Ports:
+ * * input (input, digital) -- LED input.
+ */
+
 typedef struct led_inst_t {
 	csim_iocomp_inst_t inst;
 	int state;
@@ -10,27 +19,45 @@ void led_reset(csim_inst_t *inst) {
 	i->state = 0;
 }
 
+/**
+ * @ingroup led
+ */
 void led_construct(csim_inst_t *inst, csim_confs_t confs) {
 	led_reset(inst);
 }
 
+/**
+ * @ingroup led
+ */
 void led_destruct(csim_inst_t *i) { }
 
+/**
+ * @ingroup led
+ */
 void led_update(csim_port_inst_t *inst, csim_value_type_t type, csim_value_t val) {
 	led_inst_t *i = (led_inst_t *)inst;
 	i->state = val.digital;
 }
 
+/**
+ * @ingroup led
+ */
 csim_port_t led_ports[] = {
 	{ "input", CSIM_DIGITAL, led_update }
 };
 
+/**
+ * @ingroup led
+ */
 void led_write(csim_inst_t *inst, int n, csim_word_t v) {
 	led_inst_t *i = (led_inst_t *)inst;
 	i->state = v;
 	inst->board->log(inst->board, CSIM_INFO, "led_write(%d, %d)", n, v);
 }
 
+/**
+ * @ingroup led
+ */
 csim_word_t led_read(csim_inst_t *inst, int n) {
 	led_inst_t *i = (led_inst_t *)inst;
 	inst->board->log(inst->board, CSIM_INFO, "led_read(%d)", n);
@@ -41,6 +68,9 @@ csim_reg_t led_regs[] = {
 	{ "R", 0, 4, 1, 1, 0, CSIM_INT, NULL, NULL, led_read, led_write, NULL, NULL }
 };
 
+/**
+ * @ingroup led
+ */
 static int led_display(char *buf, csim_iocomp_inst_t *inst) {
 	led_inst_t *i = (led_inst_t *)inst;
 	if(i->state)
@@ -49,9 +79,15 @@ static int led_display(char *buf, csim_iocomp_inst_t *inst) {
 		return sprintf(buf, "[ ]");
 }
 
+/**
+ * @ingroup led
+ */
 static void led_on_key(char key, csim_iocomp_inst_t *inst) {
 }
 
+/**
+ * @ingroup led
+ */
 csim_iocomp_t led_component = {
 	{
 		"led",
@@ -70,6 +106,9 @@ csim_iocomp_t led_component = {
 	led_on_key
 };
 
+/**
+ * @ingroup led
+ */
 int led_state(csim_inst_t *inst) {
 	led_inst_t *i = (led_inst_t *)inst;
 	return i->state;

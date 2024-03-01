@@ -24,8 +24,64 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "csim.h"
+
+#define CSIM_INSIDE
 #include "mem.h"
+#include "csim.h"
+
+/**
+ * @defgroup csim Simulation Module
+ *
+ * Main module of CSIM.
+ *
+ * @author H. Cassé
+ *
+ */
+
+/**
+ * @typedef csim_reg_t
+ * Describe a register.
+ * @ingroup csim
+ * 
+ * @var csim_reg_t::name
+ * Name of the register.
+ * @var csim_reg_t::offset
+ * Offset of the register (relative to base address of the component).
+ * @var csim_reg_t::size
+ * Size in bits of the register.
+ * @var csim_reg_t::count
+ * Number of registers for an array of registers.
+ * @var csim_reg_t::stride
+ * Distance, in bytes, between two entries of a register array (usually size of the regioster).
+ * @var csim_reg_t::type
+ * One of CSIM_BITS, SIM_INT, CSIM_ADDR, CSIM_FLOAT32, CSIM_FLOAT64.
+ * @var csim_reg_t::make_name
+ * Function called to generate the name of the register (for user).
+ * @var csim_reg_t::display
+ * Function to display the current value of the register.
+ * @var csim_reg_t::read
+ * Function called when the register is read by the simulator throught memory.
+ * @var csim_reg_t::write
+ * Function called when the register is written by the simulator throught memory.
+ * @var csim_reg_t::get
+ * Function called when the register is read out of simulation scope.
+ * @var csim_reg_t::set
+ * Function called when the register is written out of simulation scope.
+ */
+
+/**
+ * @typedef csim_port_t
+ * Represents the instanciation of port (from an intanciated component)
+ * and can be linked. Contains also the current value on the connection.
+ * @ingroup csim
+ *
+ * @var csim_port_t::port
+ * Port of the instance.
+ * @var csim_port_t::inst
+ * Component instance owning the port.
+ * @var csim_port_t::link
+ * Link to the connected port instance.
+ */
 
 #define CSIM_IO_HASH(a)	(((csim_word_t)(a) >> CSIM_IO_SHIFT) & (CSIM_IO_SIZE - 1))
 
@@ -34,6 +90,7 @@
  * @param board	Current board.
  * @param level	Logging level.
  * @param msg	Message to display.
+ * @ingroup csim
  */
 void csim_log(csim_board_t *board, csim_level_t level, const char *msg, ...) {
 	static const char *pref[] = {
@@ -71,6 +128,7 @@ int csim_unit_top = 0;
  * Get identifier for a new or existing unit based on its name.
  * @param name	Unit name.
  * @return		Corresponding unit type.
+ * @ingroup csim
  */
 csim_port_type_t csim_get_unit(const char *name) {
 	for(int i = 0; i <= csim_unit_top; i++)
@@ -101,6 +159,7 @@ const char *csim_unit_name(csim_port_type_t t) {
  * @param data		Pointer to data.
  * @param access	Type of access.
  * @param cdata		Should be board.
+ * @ingroup csim
  */
 static void csim_on_io(csim_addr_t addr, int size, void *data, int access, void *cdata) {
 	csim_board_t *board = (csim_board_t *)cdata;
@@ -145,6 +204,7 @@ static void csim_on_io(csim_addr_t addr, int size, void *data, int access, void 
  * Add IO entry for the given registers in the given instance.
  * @param reg	Register to record.
  * @param inst	Component instance.
+ * @ingroup csim
  */
 void csim_io_add(csim_reg_t *reg, csim_inst_t *inst) {
 	csim_board_t *board = inst->board;
@@ -172,6 +232,7 @@ void csim_io_add(csim_reg_t *reg, csim_inst_t *inst) {
  * Remove IO entries for the given register.
  * @param reg	Register to record.
  * @param inst	Component instance.
+ * @ingroup csim
  */
 void csim_io_remove(csim_reg_t * reg, csim_inst_t *inst) {
 	csim_board_t *board = inst->board;
@@ -196,6 +257,7 @@ void csim_io_remove(csim_reg_t * reg, csim_inst_t *inst) {
  * @param name	Board name.
  * @param mem	Memory to use.
  * @return		Built board (or null if allocation fails).
+ * @ingroup csim
  */
 csim_board_t *csim_new_board(const char *name, csim_memory_t *mem) {
 	csim_board_t *board = (csim_board_t *)malloc(sizeof(csim_board_t));
@@ -218,6 +280,7 @@ csim_board_t *csim_new_board(const char *name, csim_memory_t *mem) {
 /**
  * Delete the given board.
  * @param board		Board to delete.
+ * @ingroup csim
  */
 void csim_delete_board(csim_board_t *board) {
 	
@@ -249,6 +312,7 @@ void csim_delete_board(csim_board_t *board) {
  * @param name	Name of the instance.
  * @param base	Base adress of the instance.
  * @return		Built instance.
+ * @ingroup csim
  */
 csim_inst_t *csim_new_component(csim_board_t *board, csim_component_t *comp, const char *name, csim_addr_t base) {
 	csim_confs_t confs = { NULL };
@@ -258,14 +322,20 @@ csim_inst_t *csim_new_component(csim_board_t *board, csim_component_t *comp, con
 
 /**
  * Build a new instance of the given component and add it to the board.
+ *
+ * confs is a null-terminated array of strings organized by pairs which
+ * first member is the entry name and the second the entry value.
+ * 
  * @param board	Board to add to.
  * @param comp	Component to build an instance for.
  * @param name	Name of the instance.
  * @param base	Base adress of the instance.
- * @return		Built instance.	
+ * @param confs	Configurations.
+ * @return		Built instance.
+ * @ingroup csim
  */
 csim_inst_t *csim_new_component_ext(csim_board_t *board, csim_component_t *comp, const char *name, csim_addr_t base, csim_confs_t confs) {
-	
+
 	/* build the instance */
 	uint8_t *p = (uint8_t *)malloc(comp->size + comp->port_cnt * sizeof(csim_port_inst_t));
 	csim_inst_t *i = (csim_inst_t *)p;
@@ -279,7 +349,11 @@ csim_inst_t *csim_new_component_ext(csim_board_t *board, csim_component_t *comp,
 		i->ports[j].inst = i;
 		i->ports[j].link = NULL;
 	}
-	
+	i->number = 0;
+	for(csim_inst_t *p = board->insts; p != NULL; p = p->next)
+		if(p->comp == comp)
+			i->number++;
+
 	/* link to the board */
 	i->next = board->insts;
 	board->insts = i;
@@ -320,6 +394,7 @@ csim_inst_t *csim_new_component_ext(csim_board_t *board, csim_component_t *comp,
 /**
  * Delete the given component.
  * @param inst	Component instance to delete.
+ * @ingroup csim
  */
 void csim_delete_component(csim_inst_t *inst) {
 	csim_board_t *b = inst->board;
@@ -335,6 +410,7 @@ void csim_delete_component(csim_inst_t *inst) {
  * @param port1	Pin 1.
  * @param inst2	Component instance 2.
  * @param port2	Pin 2.
+ * @ingroup csim
  */
 void csim_connect(csim_inst_t *inst1, csim_port_t *port1, csim_inst_t *inst2, csim_port_t *port2) {
 	assert(inst1->board == inst2->board);
@@ -374,6 +450,7 @@ void csim_connect(csim_inst_t *inst1, csim_port_t *port1, csim_inst_t *inst2, cs
  * @param port1	Pin 1.
  * @param inst2	Component instance 2.
  * @param port2	Pin 2.
+ * @ingroup csim
  */
 void csim_disconnect(csim_inst_t *inst1, csim_port_t *port1, csim_inst_t *inst2, csim_port_t *port2) {
 	assert(inst1->board == inst2->board);
@@ -399,6 +476,7 @@ void csim_disconnect(csim_inst_t *inst1, csim_port_t *port1, csim_inst_t *inst2,
  * Stop emitting on the port.
  * @param inst	Instance containing the port.
  * @param port	Port to listen to.
+ * @ingroup csim
  */
 void csim_mute(csim_inst_t *inst, csim_port_t *port) {
 	csim_board_t *b = inst->board;
@@ -426,6 +504,7 @@ void csim_mute(csim_inst_t *inst, csim_port_t *port) {
  * @param inst	Instance sending the event.
  * @param port	Pin to send to.
  * @param digit	Digital value to send.
+ * @ingroup csim
  */
 void csim_send_digital(csim_inst_t *inst, csim_port_t *port, int digit) {
 	csim_board_t *b = inst->board;
@@ -453,6 +532,7 @@ void csim_send_digital(csim_inst_t *inst, csim_port_t *port, int digit) {
  * Record a new event in the event queue.
  * @param board		Board to record event in.
  * @param evt		Event to record.
+ * @ingroup csim
  */
 void csim_record_event(csim_board_t *board, csim_evt_t *evt) {
 	if(CSIM_DEBUG >= board->level)
@@ -488,7 +568,8 @@ void csim_record_event(csim_board_t *board, csim_evt_t *evt) {
 /**
  * Remove an event from the schedule.
  * @param board		Board to work with.
- * @param evt		Event to cancle.
+ * @param evt		Event to cancel.
+ * @ingroup csim
  */
 void csim_cancel_event(csim_board_t *board, csim_evt_t *evt) {
 	if(board->evts == evt) {
@@ -509,6 +590,7 @@ void csim_cancel_event(csim_board_t *board, csim_evt_t *evt) {
  * Simulate for the given amount of time.
  * @param board		Board to simulate in.
  * @param time		Time in cycle (cycle duration depends on the board clock).
+ * @ingroup csim
  */
 void csim_run(csim_board_t *board, csim_time_t time) {
 	csim_date_t end = board->date + time;

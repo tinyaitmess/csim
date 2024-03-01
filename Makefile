@@ -4,7 +4,7 @@ WITH_ARMV5T=1
 YAML=$(PWD)/easy-yaml
 
 HEADERS=csim.h
-SOURCES=csim.c yaml.c led.c button.c
+SOURCES=csim.c yaml.c led.c button.c csim-rt.o
 ARMV5T=../armv5t
 
 CFLAGS=-g3 -Wall -fPIC -I.
@@ -48,6 +48,7 @@ yaml.o: yaml.h
 test2.o: csim.h mem.h yaml.h led.h button.h
 led.o: led.h csim.h
 button.o: button.h csim.h
+csim-rt.o: csim-rt.h
 
 
 FILES = \

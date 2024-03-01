@@ -21,8 +21,10 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "csim.h"
+
+#define CSIM_INSIDE
 #include "mem.h"
+#include "csim.h"
 
 
 /****** Component c1 ******/
