@@ -595,6 +595,7 @@ void csim_cancel_event(csim_board_t *board, csim_evt_t *evt) {
 void csim_run(csim_board_t *board, csim_time_t time) {
 	csim_date_t end = board->date + time;
 	while(board->date < end) {
+		csim_log(board, CSIM_DEBUG, "next");
 		
 		while(board->evts != NULL && board->evts->date <= board->date) {
 			csim_evt_t *evt = board->evts;

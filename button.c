@@ -17,9 +17,13 @@ void button_reset(csim_inst_t *inst) {
 void button_construct(csim_inst_t *inst, csim_confs_t confs) {
 	button_inst_t *i = (button_inst_t *)inst;
 	button_reset(inst);
-	for(int j = 0; confs[j] != NULL; j += 2)
-		if(strcmp(confs[j], "key") == 0)
+	for(int j = 0; confs[j] != NULL; j += 2) {
+		printf("DEBUG: arg %s=%s\n", confs[j], confs[j+1]);
+		if(strcmp(confs[j], "key") == 0) {
 			sscanf(confs[j + 1], "%c", &i->key);
+			printf("DEBUG: %s -> %c\n", confs[j+1], i->key);
+		}
+	}
 }
 
 void button_destruct(csim_inst_t *c) {

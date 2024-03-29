@@ -35,7 +35,7 @@ void led_destruct(csim_inst_t *i) { }
  * @ingroup led
  */
 void led_update(csim_port_inst_t *inst, csim_value_type_t type, csim_value_t val) {
-	led_inst_t *i = (led_inst_t *)inst;
+	led_inst_t *i = (led_inst_t *)inst->inst;
 	i->state = val.digital;
 }
 

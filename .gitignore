@@ -22,6 +22,14 @@ gliss/gep/gep
 gliss/optirg/formatlexer.ml
 gliss/optirg/optirg
 gliss/optirg/test
+/gliss/gep/gliss-attr
+/gliss/gep/gliss-csim
+/gliss/gep/gliss-disasm
+/gliss/gep/gliss-used-regs
+/gliss/optirg/test.nml
+/gliss/optirg/test_assig.nml
+python/build
+
 **/.dep
 config.mk
 armv5t

@@ -8,3 +8,6 @@ components
     base: B0000000
     key: b
 connect
+  -
+    from: BUTTON.output
+    to: LED.input

@@ -165,6 +165,7 @@ static yaml_next_t on_key(const char *key, const char *val, void *data) {
 		break;
 
 	case IN_LINK:
+		printf("DEBUG: IN_LINK %s=%s\n", key, val);
 		if(strcmp(key, "from"))
 			return scan_port(loader, val, &loader->from_inst, &loader->from_port);
 		else if(strcmp(key, "to"))
@@ -226,6 +227,11 @@ static void on_end(void *data) {
 
 	case IN_LINK:
 		csim_connect(loader->from_inst, loader->from_port, loader->to_inst, loader->to_port);
+		printf("DEBUG: %s.%s -> %s.%s\n",
+			loader->from_inst->name,
+			loader->from_port->name,
+			loader->to_inst->name,
+			loader->to_port->name);
 		loader->from_inst = NULL;
 		loader->from_port = NULL;
 		loader->to_inst = NULL;
@@ -433,26 +439,33 @@ int main(int argc, const char *argv[]) {
 	csim_board_t *board;
 	char path[256];
 	if(board_path == NULL) {
-		int l = strlen(argv[1]);
-		if(strcmp(".elf", argv[1] + l - 4) == 0) {
-			strncpy(path, argv[1], l-4);
+		int l = strlen(exec);
+		if(strcmp(".elf", exec + l - 4) == 0) {
+			strncpy(path, exec, l-4);
 			path[l-4] = '\0';
 		}
 		else
-			strcpy(path, argv[1]);
+			strcpy(path, exec);
 		strcat(path, ".yaml");
+		if(VERBOSE)
+			fprintf(stderr, "looking for board %s.\n", path);
 		if(access(path, R_OK) == 0)
 			board_path = path;
 	}
 	if(board_path == NULL) {
+		if(VERBOSE)
+			fprintf (stderr, "setting default board!\n");
 		char *confs[] = { "key", "a", NULL };
 		board = csim_new_board("default", arm_get_memory(pf, ARM_MAIN_MEMORY));
 		csim_new_component(board, &led_component.comp, "led", 0xA0000000);
 		csim_new_component_ext(board, &button_component.comp, "button", 0xB0000000, confs);
 		board->level = CSIM_ERROR;
 	}
-	else
+	else {
+		if(VERBOSE)
+			fprintf(stderr, "loading board from %s\n", board_path);
 		board = load_board(board_path, arm_get_memory(pf, ARM_MAIN_MEMORY));
+	}
 
 	// initialize input
 	fd_set set;
