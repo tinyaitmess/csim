@@ -105,25 +105,33 @@ static void display_$(name)(csim_inst_t *inst, int num, char *__buffer, int size
 }
 
 static csim_word_t read_$(name)(csim_inst_t *inst, int num) {
-	$(comp)_inst_t *__inst = ($(comp)_inst_t *)inst;
-	$(ifdef on_read)
-		$(on_read);
+	$(if is_read_only)
+		csim_log(inst->board, CSIM_WARN, "read of ${comp}.${name} that is read-only");
 	$(else)
+		$(comp)_inst_t *__inst = ($(comp)_inst_t *)inst;
+		$(ifdef on_read)
+			$(on_read);
+		$(else)
+			$(if multiple)
+				return __inst->$(name)[num];
+			$(else)
+				return __inst->$(name);
+			$(end)
+		$(end)
+	$(end)
+}
+ 
+static csim_word_t get_$(name)(csim_inst_t *inst, int num) {
+	$(if is_write_only)
+		csim_log(inst->board, CSIM_WARN, "write of ${comp}.${name} that is write-only");
+	$(else)
+		$(comp)_inst_t *__inst = ($(comp)_inst_t *)inst;
 		$(if multiple)
 			return __inst->$(name)[num];
 		$(else)
 			return __inst->$(name);
 		$(end)
 	$(end)
-}
- 
-static csim_word_t get_$(name)(csim_inst_t *inst, int num) {
-	$(comp)_inst_t *__inst = ($(comp)_inst_t *)inst;
-	$(if multiple)
-		return __inst->$(name)[num];
-	$(else)
-		return __inst->$(name);
-	$(end)	
 }
  
 static void set_$(name)(csim_inst_t *inst, int num, csim_word_t val) {

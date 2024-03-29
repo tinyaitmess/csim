@@ -18,13 +18,11 @@ gliss/irg/gliss-tree
 gliss/irg/mkirg
 gliss/irg/parser.output
 gliss/gep/templater.ml
-gliss/gep/gliss-*
 gliss/gep/gep
 gliss/optirg/formatlexer.ml
 gliss/optirg/optirg
 gliss/optirg/test
 **/.dep
-*.nml
 config.mk
 armv5t
 gliss2

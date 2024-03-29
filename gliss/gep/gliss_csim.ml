@@ -132,10 +132,24 @@ let get_registers info f dict =
 
 		let display out =
 			fprintf out "snprintf(__buffer, size, \"%%d\", __inst->%s);" name in
+
+		let is_read_only out =
+			false in
+			(*match get_int_att "read_only" atts with
+			| None -> pre_error "read_only must evaluate to 0 or to 1"
+			| Some x -> x = Int32.zero in*)
+
+		let is_write_only out =
+			false in
+			(*match get_int_att "write_only" atts with
+			| None -> pre_error "write_only must evaluate to 0 or to 1"
+			| Some x -> x = Int32.zero in*)
 	
 		("count", out (fun _ -> sprintf "%d" count)) ::
 		("ctype", text ctype) ::
 		("display", text display) ::
+		("is_read_only", bool is_read_only) ::
+		("is_write_only", bool is_write_only) ::
 		("label", text label) ::
 		("name", out (fun _ -> name)) ::
 		("NAME", out (fun _ -> name)) ::
