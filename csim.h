@@ -175,7 +175,10 @@ struct csim_inst_t {
 struct csim_core_t {
 	csim_component_t comp;
 	csim_clock_t clock;
-	void (*step)(csim_core_inst_t *comp);
+	void (*step)(csim_core_inst_t *inst);
+	int (*load)(csim_core_inst_t *inst, const char *path);
+	csim_addr_t (*pc)(csim_core_inst_t *inst);
+	void (*disasm)(csim_core_inst_t *inst, csim_addr_t addr, char buf[]);
 };
 
 struct csim_core_inst_t {
