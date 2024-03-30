@@ -5,7 +5,7 @@ WITH_ARMV5T=1
 YAML=$(PWD)/easy-yaml
 
 HEADERS=csim.h
-SOURCES=csim.c yaml.c led.c button.c csim-rt.o arm_core.c
+SOURCES=csim.c yaml.c led.c button.c csim-rt.o arm_core.c loader.c
 #ARMV5T=armv5t
 
 CFLAGS=-g3 -Wall -fPIC -I.
@@ -35,7 +35,7 @@ OBJECTS=$(SOURCES:.c=.o)
 
 
 # rules
-all: gliss-all libcsim.a test-csim test2 $(ALL)
+all: gliss-all libcsim.a test-csim csim-run $(ALL)
 
 clean: gliss-clean $(CLEAN)
 	-rm -rf $(OBJECTS) test-csim.o test-csim
@@ -46,7 +46,7 @@ distclean: clean $(DISTCLEAN)
 test-csim: test-csim.o libcsim.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
-test2: test2.o libcsim.a
+csim-run: csim-run.o libcsim.a
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 libcsim.a: $(OBJECTS)
@@ -60,6 +60,7 @@ test2.o: csim.h mem.h yaml.h led.h button.h
 led.o: led.h csim.h
 button.o: button.h csim.h
 csim-rt.o: csim-rt.h
+loader.o: csim.h yaml.h
 
 FILES = \
 	csim/README.md \
