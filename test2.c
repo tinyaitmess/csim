@@ -34,19 +34,19 @@
 #include "csim.h"
 
 #include "yaml.h"
-#include <arm/api.h>
-#include <arm/loader.h>
 
 #include "led.h"
 #include "button.h"
+#include "arm_core.h"
 
 #define INST_SLICE	10
 
 /****** Board ******/
 
-csim_component_t *comps[32] = {
+csim_component_t *comps[] = {
 	&led_component.comp,
 	&button_component.comp,
+	&arm_component.comp,
 	NULL
 };
 
@@ -165,7 +165,6 @@ static yaml_next_t on_key(const char *key, const char *val, void *data) {
 		break;
 
 	case IN_LINK:
-		printf("DEBUG: IN_LINK %s=%s\n", key, val);
 		if(strcmp(key, "from"))
 			return scan_port(loader, val, &loader->from_inst, &loader->from_port);
 		else if(strcmp(key, "to"))
@@ -227,11 +226,6 @@ static void on_end(void *data) {
 
 	case IN_LINK:
 		csim_connect(loader->from_inst, loader->from_port, loader->to_inst, loader->to_port);
-		printf("DEBUG: %s.%s -> %s.%s\n",
-			loader->from_inst->name,
-			loader->from_port->name,
-			loader->to_inst->name,
-			loader->to_port->name);
 		loader->from_inst = NULL;
 		loader->from_port = NULL;
 		loader->to_inst = NULL;
@@ -299,7 +293,8 @@ void init_console() {
 }
 
 //csim_inst_t *led, *button;
-arm_sim_t *sim;
+//arm_sim_t *sim;
+csim_core_inst_t *core;
 
 
 /**
@@ -325,10 +320,9 @@ void print_state(csim_board_t *board, int clear) {
 	}
 
 	// generate the instruction
-	p += sprintf(p, "%08x ", arm_next_addr(sim));
-	arm_inst_t *inst = arm_next_inst(sim);
-	arm_disasm(p, inst);
-	arm_free_inst(inst);
+	csim_addr_t pc = csim_core_pc(core);
+	p += sprintf(p, "%08x ", pc);
+	csim_core_disasm(core, pc, p);
 
 	// compute the size
 	int size = p - buf + strlen(p);
@@ -400,41 +394,6 @@ int main(int argc, const char *argv[]) {
 		exit(1);
 	}
 
-	/* load the executable */
-	arm_loader_t *loader = arm_loader_open(exec);
-	if(loader == NULL) {
-		fprintf(stderr, "ERROR: cannot load %s\n", exec);
-		exit(1);
-	}
-
-	/* look for _start and _exit */
-	arm_address_t _start, _exit;
-	int start_done = 0, exit_done = 0;
-	for(int i = 0; i < arm_loader_count_syms(loader); i++) {
-		arm_loader_sym_t sym;
-		arm_loader_sym(loader, i, &sym);
-		if(strcmp(sym.name, "_start") == 0) {
-			_start = sym.value;
-			start_done = 1;
-		}
-		else if(strcmp(sym.name, "_exit") == 0) {
-			_exit = sym.value;
-			exit_done = 1;
-		}
-		if(start_done && exit_done)
-			break;
-	}
-	if(!start_done) {
-		fprintf(stderr, "ERROR: no _start symbol!\n");
-		exit(1);
-	}
-
-	/* build the ARMv5 simulator */
-	arm_platform_t *pf = arm_new_platform();
-	arm_load(pf, loader);
-	arm_state_t *state = arm_new_state(pf);
-	sim = arm_new_sim(state, _start, _exit);
-
 	/* build the board */
 	csim_board_t *board;
 	char path[256];
@@ -455,8 +414,9 @@ int main(int argc, const char *argv[]) {
 	if(board_path == NULL) {
 		if(VERBOSE)
 			fprintf (stderr, "setting default board!\n");
+		board = csim_new_board("default", NULL);
+		core = (csim_core_inst_t *)csim_new_component(board, &arm_component.comp, "core", 0);
 		char *confs[] = { "key", "a", NULL };
-		board = csim_new_board("default", arm_get_memory(pf, ARM_MAIN_MEMORY));
 		csim_new_component(board, &led_component.comp, "led", 0xA0000000);
 		csim_new_component_ext(board, &button_component.comp, "button", 0xB0000000, confs);
 		board->level = CSIM_ERROR;
@@ -464,7 +424,20 @@ int main(int argc, const char *argv[]) {
 	else {
 		if(VERBOSE)
 			fprintf(stderr, "loading board from %s\n", board_path);
-		board = load_board(board_path, arm_get_memory(pf, ARM_MAIN_MEMORY));
+		board = load_board(board_path, NULL);
+		if(board->cores == NULL) {
+			fprintf(stderr, "ERROR: no core in this board!\n");
+			exit(2);
+		}
+		else
+			core = board->cores;
+	}
+
+	// load the executable
+	int rc = csim_core_load(core, exec);
+	if(rc != 0) {
+		fprintf(stderr, "ERROR: cannot load \"%s\": %d.\n", exec, rc);
+		exit(1);
 	}
 
 	// initialize input
@@ -491,12 +464,6 @@ int main(int argc, const char *argv[]) {
 			for(csim_iocomp_inst_t *i = board->iocomps; i != NULL; i = i->next)
 				((csim_iocomp_t *)i->inst.comp)->on_key(key, i);
 		}
-
-		// simulate the code
-		for(int i = 0; i < INST_SLICE && !arm_is_sim_ended(sim); i++)
-			arm_step(sim);
-
-		// run the board
 		csim_run(board, 1);
 	}
 	return 0;

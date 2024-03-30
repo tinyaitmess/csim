@@ -1,5 +1,7 @@
 name: sample1
 components
+  CORE
+    type: arm
   LED
     type: led
     base: A0000000

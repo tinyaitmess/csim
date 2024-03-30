@@ -179,6 +179,7 @@ struct csim_core_t {
 	int (*load)(csim_core_inst_t *inst, const char *path);
 	csim_addr_t (*pc)(csim_core_inst_t *inst);
 	void (*disasm)(csim_core_inst_t *inst, csim_addr_t addr, char buf[]);
+	void *(*memory)(csim_core_inst_t *inst);
 };
 
 struct csim_core_inst_t {
@@ -249,5 +250,16 @@ void csim_record_event(csim_board_t *board, csim_evt_t *evt);
 void csim_cancel_event(csim_board_t *board, csim_evt_t *evt);
 
 void csim_run(csim_board_t *board, csim_time_t time);
+
+
+/* core functions */
+#define csim_core_pc(i) \
+	((csim_core_t *)(i)->inst.comp)->pc(i)
+#define csim_core_disasm(i, a, b) \
+	((csim_core_t *)(i)->inst.comp)->disasm(i, a, b)
+#define csim_core_load(i, p) \
+	((csim_core_t *)(i)->inst.comp)->load(i, p)
+#define csim_core_memory(i) \
+	((csim_core_t *)(i)->inst.comp)->memory(i)
 
 #endif	/* GLISS2_CSIM_H */

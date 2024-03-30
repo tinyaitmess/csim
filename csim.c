@@ -255,7 +255,7 @@ void csim_io_remove(csim_reg_t * reg, csim_inst_t *inst) {
 /**
  * Initialize the board.
  * @param name	Board name.
- * @param mem	Memory to use.
+ * @param mem	Memory to use (possibly NULL and then derived from core).
  * @return		Built board (or null if allocation fails).
  * @ingroup csim
  */
@@ -319,6 +319,16 @@ csim_inst_t *csim_new_component(csim_board_t *board, csim_component_t *comp, con
 	return csim_new_component_ext(board, comp, name, base, confs);
 }
 
+/**
+ * Record the registers of the component in the address space.
+ * @param board		Current board.
+ * @param inst		Component instance.
+ */
+static void csim_record_regs(csim_board_t *board, csim_inst_t *inst) {
+	csim_component_t *comp = inst->comp;
+	for(int j = 0; j < comp->reg_cnt; j++)
+		csim_io_add(&comp->regs[j], inst);
+}
 
 /**
  * Build a new instance of the given component and add it to the board.
@@ -378,15 +388,21 @@ csim_inst_t *csim_new_component_ext(csim_board_t *board, csim_component_t *comp,
 		ioi->next = board->iocomps;
 		board->iocomps = ioi;
 	}
-	
-	/* record the IO registers */
-	for(int j = 0; j < comp->reg_cnt; j++)
-		csim_io_add(&comp->regs[j], i);
-	
+
 	/* call preparation of the instance */
 	if(CSIM_DEBUG >=board->level)
 		board->log(board, CSIM_INFO, "new instance %s of %s at %08x", name, comp->name, name);
 	comp->construct(i, confs);
+
+	/* record the IO registers */
+	if(board->mem != NULL)
+		csim_record_regs(board, i);
+	else if(comp->type == CSIM_CORE) {
+		board->mem = csim_core_memory((csim_core_inst_t *)i);
+		for(csim_inst_t *ui = board->insts; ui != NULL; ui = ui->next)
+			csim_record_regs(board, ui);
+	}
+
 	return i;
 }
 

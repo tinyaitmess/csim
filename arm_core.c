@@ -33,7 +33,7 @@
 
 
 typedef struct {
-	csim_inst_t inst;
+	csim_core_inst_t inst;
 	arm_platform_t *pf;
 	arm_state_t *state;
 	arm_sim_t *sim;
@@ -99,6 +99,11 @@ void disasm(csim_core_inst_t *_inst, csim_addr_t addr, char buf[]) {
 	arm_free_inst(i);
 }
 
+void *memory(csim_core_inst_t *_inst) {
+	arm_core_inst_t *inst = (arm_core_inst_t *)_inst;
+	return arm_get_memory(inst->pf, ARM_MAIN_MEMORY);
+}
+
 csim_core_t arm_component = {
 	{
 		"arm",
@@ -115,5 +120,6 @@ csim_core_t arm_component = {
 	step,
 	load,
 	pc,
-	disasm
+	disasm,
+	memory
 };
