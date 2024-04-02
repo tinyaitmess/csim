@@ -232,7 +232,7 @@ int main(int argc, const char *argv[]) {
 	else {
 		if(VERBOSE)
 			fprintf(stderr, "loading board from %s\n", board_path);
-		board = csim_load(board_path, NULL);
+		board = csim_load_board(board_path, NULL);
 		if(board->cores == NULL) {
 			fprintf(stderr, "ERROR: no core in this board!\n");
 			exit(2);

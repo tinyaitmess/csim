@@ -34,6 +34,8 @@ python/build
 config.mk
 armv5t
 gliss2
+/csim-run
+
 
 
 

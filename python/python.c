@@ -54,11 +54,70 @@ run(PyObject *self, PyObject *args) {
 	RETURN_NONE;
 }
 
+static PyObject *
+load_board(PyObject *self, PyObject *args) {
+	const char *path;
+	if(!PyArg_ParseTuple(args, "s", &path))
+		return NULL;
+	csim_board_t *board = csim_load_board(path, NULL);
+	if(board == NULL)
+		RETURN_NONE;
+	else
+		RETURN_TPTR(csim_board_t, board);
+}
+
+static PyObject *
+get_core(PyObject *self, PyObject *args) {
+	PyObject *oboard;
+	if(!PyArg_ParseTuple(args, "O", &oboard))
+		return NULL;
+	csim_board_t *board = TPTR(csim_board_t, oboard);
+	if(board->cores == NULL)
+		RETURN_NONE;
+	else
+		RETURN_TPTR(csim_core_inst_t, board->cores);
+}
+
+static PyObject *
+core_load(PyObject *self, PyObject *args) {
+	PyObject *oinst;
+	const char *path;
+	if(!PyArg_ParseTuple(args, "Os", &oinst, &path))
+		return NULL;
+	int rc = csim_core_load(TPTR(csim_core_inst_t, oinst), path);
+	RETURN_INT(rc);
+}
+
+static PyObject *
+core_pc(PyObject *self, PyObject *args) {
+	PyObject *oinst;
+	if(!PyArg_ParseTuple(args, "O", &oinst))
+		return NULL;
+	RETURN_LONG(csim_core_pc(TPTR(csim_core_inst_t, oinst)));
+}
+
+static PyObject *
+core_disasm(PyObject *self, PyObject *args) {
+	PyObject *oinst;
+	uint64_t addr;
+	if(!PyArg_ParseTuple(args, "OK", &oinst, &addr))
+		return NULL;
+	char buf[256];
+	csim_core_disasm(TPTR(csim_core_inst_t, oinst), addr, buf);
+	RETURN_STR(buf);
+}
+
+
 static PyMethodDef csim_methods[] = {
 	FUN(new_board, "(name, memory) Create a new board."
 		"memory may be None. Return the board."),
 	FUN(delete_board, "(board) Delete the given board"),
 	FUN(run, "(board, time) Run the board during time cycles"),
+	FUN(load_board, "(path) Load the given executable and build/return the board"),
+	FUN(get_core, "(board) Get the execution core of the board (may return None if there is no core)."),
+	FUN(core_load, "(core instance, path) Load the executable from the path into the board containing the core. "),
+	FUN(core_pc, "(core instance) Get the current PC address of the given core instance."),
+	FUN(core_disasm, "(core instance, address) Return the disassembly of the instruction at the given address."),
 	{NULL, NULL, 0, NULL}
 };
 

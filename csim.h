@@ -236,7 +236,7 @@ const char *csim_unit_name(csim_port_type_t type);
 
 csim_board_t *csim_new_board(const char *name, csim_memory_t *mem);
 void csim_delete_board(csim_board_t *board);
-csim_board_t *csim_load(const char *path, csim_memory_t *mem);
+csim_board_t *csim_load_board(const char *path, csim_memory_t *mem);
 
 csim_inst_t *csim_new_component(csim_board_t *board, csim_component_t *comp, const char *name, csim_addr_t base);
 csim_inst_t *csim_new_component_ext(csim_board_t *board, csim_component_t *comp, const char *name, csim_addr_t base, csim_confs_t confs);

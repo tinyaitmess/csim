@@ -32,7 +32,7 @@ The documentation is in `html/index.html`.
 
 To launch the code, a program must be provided to the command, for instance `samples/sample1.elf`. Then type:
 
-	$ ./test2 samples/sample1.elf
+	$ ./csim-run samples/sample1.elf
 
 The current simulation simulates the program with two peripherals: a LED and a push button. They are displayed this way:
 
