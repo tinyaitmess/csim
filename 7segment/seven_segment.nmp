@@ -1,0 +1,29 @@
+let component = "seven_segment"
+let arch = "stm32"
+let license = "GPL"
+let copyright = "University of Toulouse 3"
+let date = "02/04/2024"
+
+
+type bit = card(1)
+type segment = card(8)
+type word = card(32)
+
+reg HEX[6,segment] /* the displays */
+    offset = 0x0
+
+port HEX03(32, bit)
+	label = "HEX03"
+
+    on_input = {
+        HEX[__INDEX] = HEX03[__INDEX];
+    }
+
+port HEX45(32, bit)
+	label = "HEX45"
+
+    on_input = {
+        if __INDEX <= 32*6 then
+            HEX[__INDEX+32] = HEX45[__INDEX];
+        endif;
+    }
