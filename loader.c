@@ -30,6 +30,8 @@
 
 #include "led.h"
 #include "button.h"
+#include "seven_seg_controller.h"
+#include "seven_seg_display.h"
 #include "arm_core.h"
 
 
@@ -39,6 +41,8 @@
 csim_component_t *comps[] = {
 	&led_component.comp,
 	&button_component.comp,
+	&seven_seg_controller_component,
+	&seven_seg_display_component.comp,
 	&arm_component.comp,
 	NULL
 };

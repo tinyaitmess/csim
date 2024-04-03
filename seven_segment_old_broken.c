@@ -510,20 +510,80 @@ static void on_update_HEX45(csim_inst_t *inst) {
 
 
 
+// hand coded part
 
-/**
- * seven_segment description structure.
- */
-csim_component_t  seven_segment_component = {
-    "seven_segment",
-    CSIM_SIMPLE,
-    0,					// version
-    regs,				// registers
-    1,	// register count
-    ports,				// ports
-    2,		// port count
-    sizeof(seven_segment_inst_t),
-    seven_segment_construct,
-    seven_segment_destruct,
-    seven_segment_reset
+#define ZERO  0b00111111
+#define ONE   0b00000011
+#define TWO   0b01011011
+#define THREE 0b01001111
+#define FOUR  0b01100110
+#define FIVE  0b01101101
+#define SIX   0b01111101
+#define SEVEN 0b00000111
+#define EIGHT 0b01111111
+#define NINE  0b01110111
+
+static int seven_segment_display(char *buf, csim_iocomp_inst_t *inst) {
+	seven_segment_inst_t *instance = (seven_segment_inst_t *)inst;
+	char displays[] = "0 0 0 0 0 0";
+	for (uint8_t i = 0; i < 6; i++)
+	{
+		switch (instance->HEX[i] & 0b01111111) {
+			case ZERO :
+				displays[2*i] = '0';
+				break;
+			case ONE :
+				displays[2*i] = '1';
+				break;	
+			case TWO :
+				displays[2*i] = '2';
+				break;
+			case THREE :
+				displays[2*i] = '3';
+				break;
+			case FOUR :
+				displays[2*i] = '4';
+				break;
+			case FIVE :
+				displays[2*i] = '5';
+				break;
+			case SIX :
+				displays[2*i] = '6';
+				break;
+			case SEVEN :
+				displays[2*i] = '7';
+				break;
+			case EIGHT :
+				displays[2*i] = '8';
+				break;
+			case NINE :
+				displays[2*i] = '9';
+				break;
+			default :
+				displays[2*i] = 'X';
+		}
+	}
+
+	return sprintf(buf,displays);
+}
+
+static void seven_segment_on_key(char key, csim_iocomp_inst_t *inst) {
+}
+
+csim_iocomp_t seven_segment_component = {
+	{
+		"seven_segment",
+		CSIM_IO,
+		1,
+		regs,
+		1,
+		ports,
+		1,
+		sizeof(seven_segment_inst_t),
+		seven_segment_construct,
+		seven_segment_destruct,
+		seven_segment_reset
+	},
+	seven_segment_display,
+	seven_segment_on_key
 };

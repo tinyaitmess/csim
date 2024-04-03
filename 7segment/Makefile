@@ -1,16 +1,15 @@
 GLISS = ../gliss/gep/gliss-csim
 CFLAGS = -I.. -g
 
-NMPS = \
-	seven_segment.nmp
+NMPS = seven_seg_controller.nmp seven_seg_display.nmp
 
-all: libstm32.a
+all: $(NMPS:.nmp=.c)
 
 clean:
-	-rm $(NMPS:.mp=.o) libstm32.a
+	-rm $(NMPS:.nmp=.o) libstm32.a
 
 distclean: clean
-	-rm $(NMPS:.mp=.h) $(NMPS:.mp=.c)
+	-rm $(NMPS:.nmp=.h) $(NMPS:.nmp=.c)
 	
 libstm32.a: $(NMPS:.nmp=.o)
 	ar rcs $@ $^

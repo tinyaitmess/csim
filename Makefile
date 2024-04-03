@@ -5,7 +5,7 @@ WITH_ARMV5T=1
 YAML=$(PWD)/easy-yaml
 
 HEADERS=csim.h
-SOURCES=csim.c yaml.c led.c button.c csim-rt.o arm_core.c loader.c
+SOURCES=csim.c yaml.c seven_seg_controller.c seven_seg_display.c led.c button.c csim-rt.o arm_core.c loader.c
 #ARMV5T=armv5t
 
 CFLAGS=-g3 -Wall -fPIC -I.
@@ -57,8 +57,8 @@ mem.o: mem.h
 test-csim.o: csim.h
 yaml.o: yaml.h
 test2.o: csim.h mem.h yaml.h led.h button.h
-led.o: led.h csim.h
-button.o: button.h csim.h
+led.o: led.h seven_seg_controller.h seven_seg_display.h csim.h
+button.o: button.h seven_seg_controller.h seven_seg_display.h csim.h
 csim-rt.o: csim-rt.h
 loader.o: csim.h yaml.h
 
