@@ -1,0 +1,51 @@
+name: sample5
+components
+  CORE
+    type: arm
+  DISPLAY_CONTROLLER
+    type: seven_seg_controller
+    base: 0xFF200020
+  DISPLAY0
+    type: seven_seg_display
+    base: 0xFFFFFFFF
+  DISPLAY1
+    type: seven_seg_display
+    base: 0xFFFFFFFF
+  DISPLAY2
+    type: seven_seg_display
+    base: 0xFFFFFFFF
+  DISPLAY3
+    type: seven_seg_display
+    base: 0xFFFFFFFF
+  DISPLAY4
+    type: seven_seg_display
+    base: 0xFFFFFFFF
+  DISPLAY5
+    type: seven_seg_display
+    base: 0xFFFFFFFF
+
+
+  BUTTON
+    type: button
+    base: B0000000
+    key: b
+connect
+  -
+    from: DISPLAY0.input
+    to: DISPLAY0.input
+  -
+    from: DISPLAY_CONTROLLER.HEX1
+    to: DISPLAY1.input
+  -
+    from: DISPLAY_CONTROLLER.HEX2
+    to: DISPLAY2.input
+  -
+    from: DISPLAY_CONTROLLER.HEX3
+    to: DISPLAY3.input
+  -
+    from: DISPLAY_CONTROLLER.HEX4
+    to: DISPLAY4.input
+  -
+    from: DISPLAY_CONTROLLER.HEX5
+    to: DISPLAY5.input
+

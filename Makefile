@@ -8,7 +8,7 @@ HEADERS=csim.h
 SOURCES=csim.c yaml.c seven_seg_controller.c seven_seg_display.c led.c button.c csim-rt.o arm_core.c loader.c
 #ARMV5T=armv5t
 
-CFLAGS=-g3 -Wall -fPIC -I.
+CFLAGS=-g3 -Wall -fPIC -I. -DCOMPAT
 LDFLAGS=-L. -lcsim
 
 # additional goals

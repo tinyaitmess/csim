@@ -5,6 +5,7 @@
 #include <csim.h>
 #include "csim-rt.h"
 
+
 #define ____COMP_NUM		(inst->number)
 #	define _HEX03	__inst->HEX03
 #	define _HEX45	__inst->HEX45

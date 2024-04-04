@@ -159,50 +159,49 @@ static void on_update_input(csim_inst_t *inst) {
 
 static int seven_seg_display_display(char *buf, csim_iocomp_inst_t *inst) {
 	seven_seg_display_inst_t *instance = (seven_seg_display_inst_t *)inst;
-	char displays[] = "0 0 0 0 0 0";
-	for (uint8_t i = 0; i < 6; i++)
+	char display[] = ".";
+	uint8_t input = 0;
+	for (unsigned int i = 0; i < 8; i++)
 	{
-		uint8_t input = 0;
-		for (uint8_t i = 0; i < 7; i++)
-			input += (instance->input[i] << i);
-		
-		switch (input & 0b01111111) {
-			case ZERO :
-				displays[2*i] = '0';
-				break;
-			case ONE :
-				displays[2*i] = '1';
-				break;	
-			case TWO :
-				displays[2*i] = '2';
-				break;
-			case THREE :
-				displays[2*i] = '3';
-				break;
-			case FOUR :
-				displays[2*i] = '4';
-				break;
-			case FIVE :
-				displays[2*i] = '5';
-				break;
-			case SIX :
-				displays[2*i] = '6';
-				break;
-			case SEVEN :
-				displays[2*i] = '7';
-				break;
-			case EIGHT :
-				displays[2*i] = '8';
-				break;
-			case NINE :
-				displays[2*i] = '9';
-				break;
-			default :
-				displays[2*i] = 'X';
-		}
+		input += instance->input[i] << i;
 	}
+	
+	switch (input & 0b01111111) {
+		case ZERO :
+			display[0] = '0';
+			break;
+		case ONE :
+			display[0] = '1';
+			break;	
+		case TWO :
+			display[0] = '2';
+			break;
+		case THREE :
+			display[0] = '3';
+			break;
+		case FOUR :
+			display[0] = '4';
+			break;
+		case FIVE :
+			display[0] = '5';
+			break;
+		case SIX :
+			display[0] = '6';
+			break;
+		case SEVEN :
+			display[0] = '7';
+			break;
+		case EIGHT :
+			display[0] = '8';
+			break;
+		case NINE :
+			display[0] = '9';
+			break;
+		default :
+			display[0] = 'X';
+		}
 
-	return sprintf(buf,displays);
+	return sprintf(buf,display);
 }
 
 
