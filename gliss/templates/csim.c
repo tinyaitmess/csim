@@ -170,7 +170,7 @@ static csim_reg_t regs[] = {
 	{
 		"$(name)",		// name
 		$(offset),		// offset
-		$(size),		// size
+		$(size)/8,		// size
 		$(count),		// count
 		$(stride),		// stride
 		0,				// flags
@@ -207,7 +207,7 @@ static csim_port_t ports[] = {
 			$(end)
 		$(else)
 			{
-				"$(label)",
+				"$(name)",
 				$(type),
 				on_input_$(name)
 			},
@@ -221,7 +221,19 @@ $(foreach ports)
 
 static void on_input_$(name)(csim_port_inst_t *inst, csim_value_type_t type, csim_value_t val) {
 	$(comp)_inst_t *__inst = ($(comp)_inst_t *)inst->inst;
+	$(ctype) $(name) = __inst->$(name);
 	int ____INDEX = inst->port - (ports + $(name)_BASE);
+	if (type == CSIM_DIGITAL)
+		$(name) = val.digital;
+	if (type == CSIM_ANALOG)
+		$(name) = val.analog;
+	if (type == CSIM_CLOCK)
+		$(name) = val.clock;
+	if (type == CSIM_SERIAL)
+		$(name) = val.serial;
+	
+	
+	
 $(on_input)
 }
 
@@ -241,7 +253,7 @@ csim_component_t  $(comp)_component = {
     CSIM_SIMPLE,
     0,					// version
     regs,				// registers
-    $(register_count),	// register count
+    $(register_count) ,	// register count
     ports,				// ports
     $(port_count),		// port count
     sizeof($(comp)_inst_t),
