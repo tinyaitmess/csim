@@ -170,7 +170,7 @@ static csim_reg_t regs[] = {
 	{
 		"$(name)",		// name
 		$(offset),		// offset
-		$(size)/8,		// size
+		$(size),		// size
 		$(count),		// count
 		$(stride),		// stride
 		0,				// flags

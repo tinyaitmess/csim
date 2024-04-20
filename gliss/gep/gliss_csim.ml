@@ -160,7 +160,7 @@ let get_registers info f dict =
 			let info = Toc.info () in
 			info.Toc.out <- out;
 			Toc.gen_stat info (Toc.prepare_stat info action)))::
-		("size", out (fun _ -> sprintf "%d" (Sem.get_type_length typ))) ::
+		("size", out (fun _ -> sprintf "%d" ((Sem.get_type_length typ)/8))) ::
 		("stride",  text stride) ::
 		("type", out (fun _ -> Toc.type_to_string (Toc.convert_type typ))) ::
 		dict in
