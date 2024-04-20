@@ -14,45 +14,29 @@ reg HEX45[1, word]
     offset = 0x10
 
 
-port HEX0(8, bit)
-    on_update = {
-        for i in 0..7 do
-            HEX0[i%8] = HEX03<i..i>;
-        enddo;
+port HEX0(1, byte)
+    on_update = {    
+    HEX0 = HEX03<0..7>;
     }
 
-port HEX1(8, bit)
-    label = format("HEX1_%d_%d",__COMP_NUM,__INDEX)
-    on_update = {
-        for i in 8..15 do
-            HEX1[i%8] = HEX03<i..i>;
-        enddo;
+port HEX1(1, byte)
+    on_update = {    
+    HEX1 = HEX03<8..15>;
     }
-port HEX2(8, bit)
-    label = format("HEX2_%d_%d",__COMP_NUM,__INDEX)
-    on_update = {
-        for i in 16..23 do
-            HEX2[i%8] = HEX03<i..i>;
-        enddo;
+port HEX2(1, byte)
+    on_update = {    
+    HEX2 = HEX03<16..23>;
     }
-port HEX3(8, bit)
-    label = format("HEX3_%d_%d",__COMP_NUM,__INDEX)
-    on_update = {
-        for i in 24..31 do
-            HEX3[i%8] = HEX03<i..i>;
-        enddo;
+port HEX3(1, byte)
+    on_update = {    
+    HEX3 = HEX03<24..31>;
     }
-port HEX4(8, bit)
-    label = format("HEX4_%d_%d",__COMP_NUM,__INDEX)
-    on_update = {
-        for i in 0..7 do 
-            HEX4[i%8] = HEX45<i..i>;
-        enddo;
+port HEX4(1, byte)
+    on_update = {    
+    HEX4 = HEX45<0..7>;
     }
-port HEX5(8, bit)
-    label = format("HEX5_%d_%d",__COMP_NUM,__INDEX)
-    on_update = {
-        for i in 8..15 do
-            HEX5[i%8] = HEX45<i..i>;
-        enddo;
+port HEX5(1, byte)
+    on_update = {    
+    HEX5 = HEX45<8..15>;
     }
+ 

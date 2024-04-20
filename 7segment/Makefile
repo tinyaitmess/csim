@@ -6,7 +6,7 @@ NMPS = seven_seg_controller.nmp seven_seg_display.nmp
 all: $(NMPS:.nmp=.c)
 
 clean:
-	-rm $(NMPS:.nmp=.o) libstm32.a
+	-rm -f $(NMPS:.nmp=.o) libstm32.a
 
 distclean: clean
 	-rm $(NMPS:.nmp=.h) $(NMPS:.nmp=.c)

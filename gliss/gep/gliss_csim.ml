@@ -206,7 +206,7 @@ let get_ports info pmap f dict =
 		("name", text (asis name)) ::
 		("on_input", text on_input) ::
 		("on_update", text on_update) ::
-		("type", text (asis "CSIM_ELECTRIC")) ::
+		("type", text (asis "CSIM_DIGITAL")) ::
 		dict in
 
 	Irg.iter
@@ -230,7 +230,7 @@ let make_top_dict comp info =
 	let port_count out =
 		let cnt = fold (fun name spec cnt ->
 			match spec with
-			| PORT _	-> cnt+1
+			| PORT (_, count, _, _)	-> cnt+count
 			| _ 		-> cnt) 0 in
 		fprintf out "%d" cnt in
 

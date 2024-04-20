@@ -7,22 +7,22 @@ components
     base: 0xFF200020
   DISPLAY0
     type: seven_seg_display
-    base: 0xFFFFFFFF
+    base: 0xFFFFFFA0
   DISPLAY1
     type: seven_seg_display
-    base: 0xFFFFFFFF
+    base: 0xFFFFFFB0
   DISPLAY2
     type: seven_seg_display
-    base: 0xFFFFFFFF
+    base: 0xFFFFFFC0
   DISPLAY3
     type: seven_seg_display
-    base: 0xFFFFFFFF
+    base: 0xFFFFFFD0
   DISPLAY4
     type: seven_seg_display
-    base: 0xFFFFFFFF
+    base: 0xFFFFFFE0
   DISPLAY5
     type: seven_seg_display
-    base: 0xFFFFFFFF
+    base: 0xFFFFFFF0
 
 
   BUTTON
@@ -31,7 +31,7 @@ components
     key: b
 connect
   -
-    from: DISPLAY0.input
+    from: DISPLAY_CONTROLLER.HEX0
     to: DISPLAY0.input
   -
     from: DISPLAY_CONTROLLER.HEX1

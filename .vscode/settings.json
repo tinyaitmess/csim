@@ -1,5 +1,10 @@
 {
     "files.associations": {
-        "seven_seg_controller.h": "c"
-    }
+        "seven_seg_controller.h": "c",
+        "compare": "c",
+        "type_traits": "c"
+    },
+    "ocaml.sandbox": {
+        "kind": "global"
+    },
 }

@@ -7,10 +7,10 @@ NMPS = \
 all: libstm32.a
 
 clean:
-	-rm $(NMPS:.mp=.o) libstm32.a
+	-rm $(NMPS:.nmp=.o) libstm32.a
 
 distclean: clean
-	-rm $(NMPS:.mp=.h) $(NMPS:.mp=.c)
+	-rm $(NMPS:.nmp=.h) $(NMPS:.nmp=.c)
 	
 libstm32.a: $(NMPS:.nmp=.o)
 	ar rcs $@ $^
