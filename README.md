@@ -46,6 +46,18 @@ Where:
 * _<inst>_ is the disassembled current instruction.
 
 
+## Using the GUI
+
+**csim** comes with a GUI developed in Python and using a browser to be displayed.
+To run it, move into `python` directory and type:
+
+```sh
+make run NUM=number
+```
+
+With _number_ one of the number of samples in directory `samples`.
+
+
 ## Programs
 
 * `sample1.elf` (source `sample1.s`) -- Switch on the LED when the button is pushed.

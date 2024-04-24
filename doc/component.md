@@ -76,7 +76,7 @@ With _ID_ the identifier of the port, _COUNT_ the number of pins in the port and
 
 The _ATTRIBUTES_ can be:
 
-* `label` = _STRING EXPRESSION_ -- to generate the name of a port pinfor an array .
+* `label` = _STRING EXPRESSION_ -- to generate the name of a port pin for an array .
 * `on_update` = { _CODE_ } -- code called each time a register is changed that may be impact the set of pins of the port.
 * `on_input` = { _CODE_ } -- codealled each time the value as input of the port pin is changed.
 

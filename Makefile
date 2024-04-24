@@ -87,11 +87,18 @@ stm32-clean:
 	cd stm32; make clean
 
 
+# python rules
+
+
 # setup
 GLISS_GIT = https://git.renater.fr/anonscm/git/gliss2/gliss2.git
 ARMV5T_GIT = https://git.renater.fr/anonscm/git/gliss2/armv5t.git
+ORCHID_GIT = https://github.com/hcasse/Orchid.git
 
-setup: config.mk git-gliss git-armv5t
+setup: config.mk git-gliss git-armv5t git-orchid setup-python
+
+setup-python:
+	cd python; make setup
 
 git-gliss:
 	@if [ -e gliss2 ]; then \
@@ -118,5 +125,14 @@ git-armv5t:
 
 config.mk:
 	cp config.in config.mk
+
+git-orchid:
+	@if [ -e Orchid ]; then \
+		echo "Updating Orchid"; \
+		cd Orchid; git pull; \
+	else \
+		echo "Downloading Orchid"; \
+		git clone $(ORCHID_GIT); \
+	fi
 
 

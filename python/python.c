@@ -31,7 +31,7 @@ new_board(PyObject *self, PyObject *args) {
 	else
 		mem = TPTR(csim_memory_t, omem);
 	csim_board_t *board = csim_new_board(name, mem);
-	board->level = CSIM_DEBUG;
+	//board->level = CSIM_DEBUG;
 	RETURN_TPTR(csim_board_t, board);
 }
 
@@ -107,6 +107,113 @@ core_disasm(PyObject *self, PyObject *args) {
 	RETURN_STR(buf);
 }
 
+static PyObject *
+find_component(PyObject *self, PyObject *args) {
+	const char *name;
+	if(!PyArg_ParseTuple(args, "s", &name))
+		return NULL;
+	csim_component_t *i = csim_find_component(name);
+	if(i == NULL)
+		RETURN_NONE;
+	else
+		RETURN_TPTR(csim_component_t, i);
+}
+
+static PyObject *
+component_info(PyObject *self, PyObject *args) {
+	PyObject *ocomp;
+	if(!PyArg_ParseTuple(args, "O", &ocomp))
+		return NULL;
+	csim_component_t *comp = TPTR(csim_component_t, ocomp);
+	return Py_BuildValue("(siiiii)",
+				comp->name,
+				comp->type,
+				comp->version,
+				comp->reg_cnt,
+				comp->port_cnt,
+				comp->size);
+}
+
+static PyObject *
+new_component(PyObject *self, PyObject *args) {
+	PyObject *oboard;
+	PyObject *ocomp;
+	const char *name;
+	csim_addr_t addr;
+	if(!PyArg_ParseTuple(args, "OOsI", &oboard, &ocomp, &name, &addr))
+		return NULL;
+	csim_component_t *comp = TPTR(csim_component_t, ocomp);
+	csim_board_t *board = TPTR(csim_board_t, oboard);
+	RETURN_TPTR(csim_inst_t,
+		csim_new_component(board, comp, name, addr));
+}
+
+static PyObject *
+get_state(PyObject *self, PyObject *args) {
+	PyObject *oinst;
+	int size;
+	if(!PyArg_ParseTuple(args, "Oi", &oinst, &size))
+		return NULL;
+	csim_iocomp_inst_t *i = (csim_iocomp_inst_t *)TPTR(csim_inst_t, oinst);
+	uint32_t buf[size];
+	((csim_iocomp_t *)(i->inst.comp))->get_state(i, buf);
+	PyObject *res = PyList_New(size);
+	for(int i = 0; i < size; i++)
+		PyList_SetItem(res, i, PyLong_FromUnsignedLong(buf[i]));
+	return res;
+}
+
+static PyObject *
+set_state(PyObject *self, PyObject *args) {
+	PyObject *oinst, *olist;
+	if(!PyArg_ParseTuple(args, "OO", &oinst, &olist))
+		return NULL;
+	csim_iocomp_inst_t *i = (csim_iocomp_inst_t *)TPTR(csim_inst_t, oinst);
+	int size = PyList_Size(olist);
+	uint32_t state[size];
+	for(int i = 0; i < size; i++)
+		state[i] = PyLong_AsLong(PyList_GetItem(olist, i));
+	((csim_iocomp_t *)i->inst.comp)->set_state(i, state);
+	RETURN_NONE;
+}
+
+static PyObject *
+find_port(PyObject *self, PyObject *args) {
+	PyObject *ocomp;
+	const char *name;
+	if(!PyArg_ParseTuple(args, "Os", &ocomp, &name))
+		return NULL;
+	csim_port_t *p = csim_find_port(TPTR(csim_component_t, ocomp), name);
+	if(p == NULL)
+		RETURN_NONE;
+	else
+		RETURN_TPTR(csim_port_t, p);
+}
+
+static PyObject *
+connect(PyObject *self, PyObject *args) {
+	PyObject *oinst1, *oport1, *oinst2, *oport2;
+	if(!PyArg_ParseTuple(args, "OOOO", &oinst1, &oport1, &oinst2, &oport2))
+		return NULL;
+	csim_connect(
+		TPTR(csim_inst_t, oinst1),
+		TPTR(csim_port_t, oport1),
+		TPTR(csim_inst_t, oinst2),
+		TPTR(csim_port_t, oport2)
+	);
+	RETURN_NONE;
+}
+
+static PyObject *
+set_log_level(PyObject *self, PyObject *args) {
+	PyObject *oboard;
+	int level;
+	if(!PyArg_ParseTuple(args, "Oi", &oboard, &level))
+		return NULL;
+	TPTR(csim_board_t, oboard)->level = (csim_level_t)level;
+	RETURN_NONE;
+}
+
 
 static PyMethodDef csim_methods[] = {
 	FUN(new_board, "(name, memory) Create a new board."
@@ -118,6 +225,14 @@ static PyMethodDef csim_methods[] = {
 	FUN(core_load, "(core instance, path) Load the executable from the path into the board containing the core. "),
 	FUN(core_pc, "(core instance) Get the current PC address of the given core instance."),
 	FUN(core_disasm, "(core instance, address) Return the disassembly of the instruction at the given address."),
+	FUN(find_component, "(name) Look for a component by its name. Return component or None."),
+	FUN(component_info, "(component) Get information about the component as the tuple (name, type, version, register count, port count, instance size)."),
+	FUN(new_component, "(board, component, name, base address) Build a new instance of the component."),
+	FUN(get_state, "(instance, size) Get state from an IO component. The result is a list of size integers."),
+	FUN(set_state, "(instance, state) Set the state of an IO component instance. state is a list of integers."),
+	FUN(find_port, "(component, name) Look for a port with a named in the component. Return found port or None."),
+	FUN(connect, "(instance 1, port 1, instance 2, port 2) Connect the port of instance 1 with the port of instance 2."),
+	FUN(set_log_level, "(board, level) Set the log level (level is an integer as CSIM_NOLOG=0, CSIM_DEBUG=1, etc)."),
 	{NULL, NULL, 0, NULL}
 };
 

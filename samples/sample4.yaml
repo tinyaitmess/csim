@@ -1,15 +1,16 @@
-name: sample1
-components
-  CORE
+name: sample4
+components:
+  CORE:
     type: arm
-  LED
+  LED:
     type: led
     base: A0000000
-  BUTTON
+  BUTTON:
     type: button
     base: B0000000
     key: b
-connect
+    x: 50
+connect:
   -
     from: BUTTON.output
     to: LED.input

@@ -35,7 +35,8 @@ config.mk
 armv5t
 gliss2
 /csim-run
-
+/Orchid
+__pycache__
 
 
 

@@ -60,9 +60,9 @@ typedef uint8_t csim_value_type_t;
 
 typedef enum csim_ctype_t {
 	CSIM_NOCTYPE = 0,
-	CSIM_SIMPLE,
-	CSIM_CORE,
-	CSIM_IO
+	CSIM_SIMPLE = 1,
+	CSIM_CORE = 2,
+	CSIM_IO = 3
 } csim_ctype_t;
 
 typedef enum csim_level_t {
@@ -73,6 +73,8 @@ typedef enum csim_level_t {
 	CSIM_ERROR = 4,
 	CSIM_FATAL = 5
 } csim_level_t;
+
+#define CSIM_STATE_STOP	0
 
 typedef struct csim_component_t csim_component_t;
 typedef struct csim_reg_t csim_reg_t;
@@ -193,6 +195,8 @@ struct csim_iocomp_t {
 	csim_component_t comp;
 	int (*display)(char *buf, csim_iocomp_inst_t *inst);
 	void (*on_key)(char key, csim_iocomp_inst_t *inst);
+	void (*get_state)(csim_iocomp_inst_t *inst, uint32_t *state);
+	void (*set_state)(csim_iocomp_inst_t *inst, uint32_t *state);
 };
 
 struct csim_iocomp_inst_t {
@@ -238,9 +242,13 @@ csim_board_t *csim_new_board(const char *name, csim_memory_t *mem);
 void csim_delete_board(csim_board_t *board);
 csim_board_t *csim_load_board(const char *path, csim_memory_t *mem);
 
+csim_component_t *csim_find_component(const char *name);
 csim_inst_t *csim_new_component(csim_board_t *board, csim_component_t *comp, const char *name, csim_addr_t base);
 csim_inst_t *csim_new_component_ext(csim_board_t *board, csim_component_t *comp, const char *name, csim_addr_t base, csim_confs_t confs);
 void csim_delete_component(csim_inst_t *inst);
+csim_inst_t *csim_find_instance(csim_board_t *board, const char *name);
+csim_port_t*csim_find_port(csim_component_t *comp, const char *name);
+
 void csim_log(csim_board_t *board, csim_level_t level, const char *msg, ...);
 
 void csim_connect(csim_inst_t *inst1, csim_port_t *port1, csim_inst_t *inst2, csim_port_t *port);
@@ -252,6 +260,8 @@ void csim_record_event(csim_board_t *board, csim_evt_t *evt);
 void csim_cancel_event(csim_board_t *board, csim_evt_t *evt);
 
 void csim_run(csim_board_t *board, csim_time_t time);
+
+void csim_no_state(csim_iocomp_inst_t *inst, uint32_t *state);
 
 
 /* core functions */

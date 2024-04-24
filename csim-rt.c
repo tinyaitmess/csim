@@ -286,12 +286,12 @@ double _invertd(double v, uint32_t n)
 }
 
 /* for these functions no inversion is done and l <= u */
-#ifdef COMPAT
+//#ifdef COMPAT
 uint32_t _set_field32u(uint32_t v, uint32_t s, int32_t u, int32_t l) {
     uint32_t mask = _mask32(u - l + 1) << l;
     return (v & ~mask) | ((s << l) & mask);
 }
-#endif
+//#endif
 
 uint64_t _set_field64u(uint64_t v, uint64_t s, int32_t u, int32_t l) {
 	uint64_t mask = _mask64(u - l + 1) << l;

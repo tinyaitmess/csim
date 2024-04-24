@@ -421,6 +421,34 @@ void csim_delete_component(csim_inst_t *inst) {
 
 
 /**
+ * Find a component instance by its name.
+ * @param board		Board to look in.
+ * @param name		Name of looked component instance.
+ * @return			Found instance or NULL.
+ */
+csim_inst_t *csim_find_instance(csim_board_t *board, const char *name) {
+	for(csim_inst_t *i = board->insts; i != NULL; i = i->next)
+		if(strcmp(i->name, name) == 0)
+			return i;
+	return NULL;
+}
+
+
+/**
+ * Look for a port matching the name in the component.
+ * @param comp		Component to look for port in.
+ * @param name		Name of the looked port.
+ * @return			Found port or NULL.
+ */
+csim_port_t*csim_find_port(csim_component_t *comp, const char *name) {
+	for(int i = 0; i < comp->port_cnt; i++)
+		if(strcmp(comp->ports[i].name, name) == 0)
+			return &comp->ports[i];
+	return NULL;
+}
+
+
+/**
  * Link two ports.
  * @param inst1	Component instance 1.
  * @param port1	Pin 1.
@@ -636,5 +664,30 @@ void csim_run(csim_board_t *board, csim_time_t time) {
 		
 		board->date++;
 	}
+}
+
+/**
+ * Provides a default implementation for IO get/set_state function pointer.
+ * @param inst	IO component instance.
+ * @param state	Buffer to store state inside.
+ * @param size	Size of state in pairs of uint32_t.
+ */
+void csim_no_state(csim_iocomp_inst_t *inst, uint32_t *state) {
+}
+
+
+extern csim_component_t *comps[];
+
+/**
+ * Find a component by its name, possibly using some mechanism to get access
+ * to it.
+ * @param name	Component name.
+ * @return		Component definition or NULL.
+ */
+csim_component_t *csim_find_component(const char *name) {
+	for(int i = 0; comps[i] != NULL; i++)
+		if(strcmp(name, comps[i]->name) == 0)
+			return comps[i];
+	return NULL;
 }
 

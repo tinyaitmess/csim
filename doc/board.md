@@ -6,9 +6,9 @@ A board is described by a **YAML** file as provided in `samples/sample.yaml` tha
 
 ```yaml
 name: BOARD_NAME
-components
+components:
 	COMPONENTS
-connect
+connect:
 	CONNECTIONS
 ```
 
@@ -18,7 +18,7 @@ connect
 _COMPONENTS_ is the list of components composing the board with format:
 
 ```yaml
-  ID
+  ID:
     type: TYPE
     base: ADDRESS
     ATTR: VALUE
@@ -50,15 +50,15 @@ Below is the **YAML** description of `sample1` board:
 
 ```yaml
 name: sample1
-components
-  LED
+components:
+  LED:
     type: led
     base: A0000000
-  BUTTON
+  BUTTON:
     type: button
     base: B0000000
     key: b
-connect
+connect:
   -
     from: BUTTON.output
     to: LED.input

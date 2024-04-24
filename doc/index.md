@@ -12,3 +12,4 @@ The following entries provide more details on this:
 
 * [How to define a component?](component.md)
 * [How to program in NML?](NMP.md)
+* [Python GUI](GUI.md)

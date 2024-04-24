@@ -3,6 +3,7 @@
 
 #include "csim.h"
 
+
 extern csim_iocomp_t button_component;
 
 int button_get(csim_inst_t *inst);
