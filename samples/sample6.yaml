@@ -1,0 +1,11 @@
+name: sample6
+components
+  CORE
+    type: arm
+  LEDS10
+    type: leds10
+    base: A0000000
+  BUTTON
+    type: button
+    base: B0000000
+    key: b
