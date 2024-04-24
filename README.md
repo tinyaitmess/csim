@@ -94,4 +94,8 @@ Then you can retrieve and compiole `armv5r` :
 **These directories have to be unpacked in the same parent directory.**
 
 
+## Credits
+
+SVG files are downloaded from [FreeSVG](https://freesvg.org/).
+
 
