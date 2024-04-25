@@ -20,6 +20,7 @@
  */
 
 #include <assert.h>
+#include <memory.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -376,7 +377,7 @@ csim_inst_t *csim_new_component_ext(csim_board_t *board, csim_component_t *comp,
 		board->cores = ci;
 		if(board->clock == 0)
 			board->clock = cc->clock;
-		else {
+		else if(cc->clock != 0) {
 			if(board->clock != cc->clock)
 				board->log(board, CSIM_FATAL, "ERROR: current version only supports multiple core with same clock.");
 		}

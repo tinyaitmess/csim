@@ -88,6 +88,11 @@ class Board:
 		# build the board
 		self.board = csim.new_board(board_name, None)
 		self.core = None
+		self.clock = util.get(desc, "clock", 1000)
+		self.quantum = util.get(desc, "quantum", 100)
+		if self.clock // self.quantum != self.clock / self.quantum:
+			util.warn("quantum (%d) must be a divider of master clock(%dHz)" % (self.quantum, self.clock))
+		csim.set_master_clock(self.board, self.clock)
 
 		# build the components
 		comps = util.obtain(desc, "components", "no component defined")

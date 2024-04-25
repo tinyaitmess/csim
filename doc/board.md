@@ -12,6 +12,10 @@ connect:
 	CONNECTIONS
 ```
 
+In addition, the board supports (at top level) supports optional arguments:
+* `clock:` _CLOCK_ defines the master clock in Hz (default 1000).
+* `quantum:` _N_ defines the number of master clock cycles to execute each time the simulator is invoked (default 100).
+
 
 ## Component Description
 

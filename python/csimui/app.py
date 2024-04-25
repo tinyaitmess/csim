@@ -30,7 +30,8 @@ class MyPage(Page):
 			app = app
 		)
 		self.show_current()
-		self.timer = Timer(self, trigger=self.run_once, period=100)
+		n = board.clock // board.quantum
+		self.timer = Timer(self, trigger=self.run_once, period=1000/n)
 
 	def show_current(self):
 		addr = self.board.core.pc()
@@ -55,7 +56,7 @@ class MyPage(Page):
 		self.show_current()
 
 	def run_once(self):
-		self.board.run()
+		self.board.run(self.board.quantum)
 		self.show_current()
 		self.board.update()
 

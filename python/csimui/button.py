@@ -34,6 +34,5 @@ class Component(components.IOComponent):
 		self.content = canvas.content(Component.IMAGE)
 		self.content.scale(2)
 		self.content.translate(self.x, self.y)
-		print(self.content)
 		self.content.add_event("onmousedown", self.on_push)
 		self.content.add_event("onmouseup", self.on_release)

@@ -31,7 +31,7 @@ new_board(PyObject *self, PyObject *args) {
 	else
 		mem = TPTR(csim_memory_t, omem);
 	csim_board_t *board = csim_new_board(name, mem);
-	//board->level = CSIM_DEBUG;
+	board->level = CSIM_WARN;
 	RETURN_TPTR(csim_board_t, board);
 }
 
@@ -214,6 +214,16 @@ set_log_level(PyObject *self, PyObject *args) {
 	RETURN_NONE;
 }
 
+static PyObject *
+set_master_clock(PyObject *self, PyObject *args) {
+	PyObject *oboard;
+	csim_clock_t clock;
+	if(!PyArg_ParseTuple(args, "OK", &oboard, &clock))
+		return NULL;
+	TPTR(csim_board_t, oboard)->clock = clock;
+	RETURN_NONE;
+}
+
 
 static PyMethodDef csim_methods[] = {
 	FUN(new_board, "(name, memory) Create a new board."
@@ -233,6 +243,7 @@ static PyMethodDef csim_methods[] = {
 	FUN(find_port, "(component, name) Look for a port with a named in the component. Return found port or None."),
 	FUN(connect, "(instance 1, port 1, instance 2, port 2) Connect the port of instance 1 with the port of instance 2."),
 	FUN(set_log_level, "(board, level) Set the log level (level is an integer as CSIM_NOLOG=0, CSIM_DEBUG=1, etc)."),
+	FUN(set_master_clock, "(board, clock) Set the master clock of the board."),
 	{NULL, NULL, 0, NULL}
 };
 

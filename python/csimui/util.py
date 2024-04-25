@@ -7,6 +7,9 @@ from orchid import Buffer
 def error(msg):
 	print("ERROR:", msg)
 
+def warn(msg):
+	print("WARNING:", msg)
+
 def fatal(msg):
 	error(msg)
 	sys.exit(1)

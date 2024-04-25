@@ -116,7 +116,7 @@ csim_core_t arm_component = {
 		destruct,
 		reset
 	},
-	0,	// clock?
+	0,	// clock
 	step,
 	load,
 	pc,
