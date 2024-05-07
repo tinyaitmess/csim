@@ -241,7 +241,9 @@ let get_events info f dict =
 
 		let on_trigger out =
 			match get_attr "on_trigger" atts with 
-				| _ -> printf "//TODO" in
+			| None -> ()
+			| Some (ATTR_STAT (_,s)) -> gen_code info s out
+			| _ -> pre_error "on_update must be an attribute and define an instruction!" in
 
 				("name", text (asis name)) ::
 				("on_update", text on_update) ::

@@ -33,10 +33,16 @@ $(foreach ports)
 $(end)
 
 
+
 /**
  * Instance definition.
  */
 typedef struct  $(comp)_inst_t {
+	$(if io_comp)
+    csim_iocomp_t inst;
+	$(else)
+	csim_inst_t inst;
+	$(end)
 	$(if io_comp)
     csim_iocomp_t inst;
 	$(else)
@@ -59,13 +65,26 @@ typedef struct  $(comp)_inst_t {
 }  $(comp)_inst_t;
 
 
-/* pre-definitiion of update functions */
+/* pre-definitiion of port update functions */
 $(foreach ports)
 	static void on_update_$(name)(csim_inst_t *inst);
 $(end)
 
+/* pre-definitiion of event update functions */
+$(foreach events)
+	static void on_update_$(name)(csim_inst_t *inst);
+$(end)
+
+/* pre-definitiion of event trigger functions */
+$(foreach events)
+	static void on_trigger_$(name)(csim_inst_t *inst);
+$(end)
+
 static void on_update_all(csim_inst_t *inst) {
 	$(foreach ports)
+		on_update_$(name)(inst);
+	$(end)	
+	$(foreach events)
 		on_update_$(name)(inst);
 	$(end)	
 }
@@ -257,7 +276,20 @@ $(on_update)
 
 $(end)
 
+$(foreach events)
+/*$(name) event functions */
 
+static void on_update_$(name)(csim_inst_t *inst) {
+	$(comp)_inst_t *__inst = ($(comp)_inst_t *)inst;
+	$(on_update)
+}
+
+static void on_trigger_$(name)(csim_inst_t *inst) {
+	$(comp)_inst_t *__inst = ($(comp)_inst_t *)inst;
+	$(on_trigger)
+}
+
+$(end)
 
 $(if io_comp)
 
