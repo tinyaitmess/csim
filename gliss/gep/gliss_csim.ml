@@ -239,6 +239,11 @@ let make_top_dict comp info =
 		| None -> "NoArch"
 		| Some name -> name in
 
+	let io_comp = 
+		match get_int_let "io_comp" with 
+		| Some 1 -> true
+		| _ -> false in
+
 	[
 		("comp", out (fun _ -> comp));
 		("COMP", out (fun _ -> String.uppercase_ascii comp));
@@ -248,7 +253,8 @@ let make_top_dict comp info =
 		("port_count", text port_count);
 		("ports", Templater.COLL (get_ports info pmap));
 		("register_count", text register_count);
-		("registers", Templater.COLL (get_registers info))
+		("registers", Templater.COLL (get_registers info));
+		("io_comp", bool (fun _ -> io_comp))
 	]
 
 

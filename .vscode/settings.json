@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "csim-rt.h": "c",
+        "csim.h": "c"
+    }
+}
