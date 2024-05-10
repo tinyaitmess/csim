@@ -10,6 +10,7 @@ type word = card(32)
 
 reg LEDR[1, word]
     offset = 0x0
+    init = 3
 
 port LEDP(1,word)
     on_input = {

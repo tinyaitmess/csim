@@ -6,7 +6,7 @@
 
 _start:
 	LDR	R0, =LEDS10
-	MOV R1, #0b1
+	LDR R1, [R0]
 	LDR R2, =BUTTON
 
 loop:

@@ -95,6 +95,18 @@ let get_registers info f dict =
 
 	let make name count typ atts dict =
 
+		let init out =
+			fprintf out "%ld"
+			(match get_int_att "init" atts with
+			| None -> Int32.of_int 0
+			| Some x -> x )in
+
+		let intern out =
+			(match get_int_att "intern" atts with
+			| Some x -> (Int32.to_int x) == 1
+			| _ -> false
+			) in
+
 		let offset out =
 			fprintf out "0x%lx"
 				(match get_int_att "offset" atts with
@@ -146,6 +158,8 @@ let get_registers info f dict =
 			| Some x -> x = Int32.zero in*)
 	
 		("count", out (fun _ -> sprintf "%d" count)) ::
+		("init", text init) ::
+		("intern", Templater.BOOL intern) ::
 		("ctype", text ctype) ::
 		("display", text display) ::
 		("is_read_only", bool is_read_only) ::

@@ -77,6 +77,9 @@ static void on_update_all(csim_inst_t *inst) {
  */
 static void  $(comp)_reset(csim_inst_t *inst) {
     $(comp)_inst_t * $(comp)_inst = ( $(comp)_inst_t *)inst;
+	$(foreach registers)
+	$(comp)_inst -> $(name) = $(init);
+	$(end)
 }
 
 /**
@@ -97,12 +100,14 @@ static void $(comp)_destruct(csim_inst_t *inst) {
 
 
 $(foreach registers)
+$(if !intern)
 /* $(name) register functions */
 
 static void name_$(name)(csim_inst_t *inst, int num, char *__buffer, int size) {
 	$(comp)_inst_t *__inst = ($(comp)_inst_t *)inst;
 	$(label)
 }
+
 
 static void display_$(name)(csim_inst_t *inst, int num, char *__buffer, int size) {
 	$(comp)_inst_t *__inst = ($(comp)_inst_t *)inst;
@@ -165,6 +170,7 @@ static void write_$(name)(csim_inst_t *inst, int num, csim_word_t val) {
 }
 
 $(end)
+$(end)
 
 
 /**
@@ -180,12 +186,14 @@ static csim_reg_t regs[] = {
 		$(stride),		// stride
 		0,				// flags
 		$(ctype),		// signal type
+		$(if !intern)
 		name_$(name),
 		display_$(name),
 		read_$(name),
 		write_$(name),
 		get_$(name),
 		set_$(name)
+		$(end)
 	},
 	$(end)
 };
