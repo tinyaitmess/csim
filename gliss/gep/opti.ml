@@ -65,6 +65,7 @@ let rec reduce_const_stmt name s =
 		| CANCEL _
 		| ERROR _ ->
 			s
+		| INTERRUPT _ -> s
 		| LINE (_, _, s) ->
 			stmt cs s
 		| LOCAL (vn, on, t, i) ->

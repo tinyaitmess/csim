@@ -65,6 +65,7 @@ let rec stmt_stateless cc s =
 	| Irg.LOCAL _
 	| Irg.SCHEDULE _
 	| Irg.CANCEL _
+	| Irg.INTERRUPT _ 
 		-> true
 	| Irg.SEQ (s1, s2)
 		-> (stmt_stateless cc s1) && (stmt_stateless cc s2)

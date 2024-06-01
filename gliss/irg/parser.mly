@@ -253,6 +253,7 @@ let top_elsif _ =
 %token	  	IMAGE
 %token    	INITIALA
 %token    	INT
+%token<int> INTERRUPT
 %token<int>	LET
 %token<int>	MEM
 %token<int>	MODE
@@ -780,6 +781,8 @@ Statement:
 		{ handle_stat (fun _ -> Sem.make_schedule $2 $4)}
 | 	CANCEL ID
 		{ handle_stat (fun _ -> Sem.make_cancel $2)}
+| INTERRUPT Constant
+	{handle_stat (fun _ -> Sem.make_interrupt (snd $2)) }
 ;
 
 ForHeader: 

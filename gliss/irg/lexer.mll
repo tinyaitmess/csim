@@ -82,6 +82,7 @@ let keywords = [
 	("in",			IN);
 	("initial",     INITIALA);
 	("int",        	INT);
+	("interrupt", 	INTERRUPT 0);
 	("let",        	LET 0);
 	("macro",       MACRO);
 	("mem",        	MEM 0);

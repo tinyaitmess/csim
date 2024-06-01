@@ -1009,7 +1009,8 @@ let rec prepare_stat info stat =
 	| Irg.NOP
 	| Irg.SCHEDULE _
 	| Irg.CANCEL _
-	| Irg.ERROR _ ->
+	| Irg.ERROR _
+	| Irg.INTERRUPT _ ->
 		stat
 
 	| Irg.SEQ (s1, s2) ->
@@ -1489,6 +1490,7 @@ let rec multiple_stats stat =
 	| Irg.SET _
 	| Irg.CANON_STAT _
 	| Irg.ERROR _
+	| Irg.INTERRUPT _
 	| Irg.SWITCH_STAT _
 	| Irg.LOCAL _
 	| Irg.SCHEDULE _
@@ -1579,6 +1581,8 @@ let rec gen_stat info stat =
 			Printf.fprintf info.out "%s_error(state, inst, \"%s\");"
 				info.proc
 				(cstring msg))
+
+	| Irg.INTERRUPT _ -> ()
 
 	| Irg.IF_STAT (cond, tpart, epart) ->
 		let tmult = multiple_stats tpart in
@@ -1738,7 +1742,8 @@ let find_recursives info name =
 			let rec look_stat stat recs =
 				match stat with
 				| Irg.NOP
-				| Irg.LOCAL _ ->
+				| Irg.LOCAL _
+				| Irg.INTERRUPT _ ->
 					recs
 				| Irg.SEQ (s1, s2) ->
 					look_stat s1 (look_stat s2 recs)

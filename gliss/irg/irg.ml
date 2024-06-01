@@ -373,6 +373,7 @@ type stat =
 	| FOR of string * string * type_expr * const * const * stat	(** (variable name, unique name, variable type, initial bound, final bound, body) Loop definition *)
 	| SCHEDULE of string * expr (** (Event name, when to set event), Scheduling of event in set time*)
 	| CANCEL of string (** (Event name), Cancelling an event*)
+	| INTERRUPT of const
 
 
 (** attribute specifications *)
@@ -623,7 +624,8 @@ let attrs_of spec =
 	| EVENT(_, atts)
 	| VAR (_, _, _, atts)
 	| AND_MODE (_, _, _, atts)
-	| AND_OP (_, _, atts)		-> atts
+	| AND_OP (_, _, atts)
+	-> atts
 	| _ 						-> []
 
 
@@ -1431,6 +1433,8 @@ let rec output_statement_tab out stat tab =
 	| CANCEL(event_name) ->
 	indent();
 		Printf.fprintf out "cancel %s" event_name
+	| INTERRUPT code ->
+		Printf.fprintf out "Interrupt"; output_const out code
 
 
 (** Print a statement
@@ -2016,6 +2020,7 @@ and line_from_stat stat =
 	| SWITCH_STAT (c, cs, d)	-> line_from_list ([LEXPR c; LSTAT d] @ (List.map (fun (_, s) -> LSTAT s) cs))
 	| LINE (f, l, _) 			-> (f, l)
 	| FOR(_, _, _, _, _, b)		-> line_from_stat b
+	| INTERRUPT (code) -> no_line
 
 and line_from_list lst =
 	match lst with

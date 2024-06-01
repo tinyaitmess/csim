@@ -136,6 +136,7 @@ let output_xml out list =
 		| FOR(v, uv, t, l, u, b)	-> xelement "for" [("id", v); ("uid", uv); ("type", type_of t); ("lo", const_of l); ("hi", const_of u)] [stat_of b]
 		| SCHEDULE (event_name, time) -> xelement "schedule" [] [] (* laissé vide car pas compris du tout*)
 		| CANCEL (event_name) ->	xelement "cancel" [] [] (* laissé vide car pas compris du tout*)
+		| INTERRUPT c -> xelement "interrupt" [("code",const_of c)] []
 	and scase_of (c, s) =
 		xelement "case" [] [expr_of c; stat_of s] in
 			
@@ -241,6 +242,7 @@ let dump_stream out list =
 		| FOR (v, _, t, l, u, b)	-> op "for"; str v; str ": "; type_of t; str " in "; const_of l; str ".."; const_of u; str "do"; com(); stat_of b; com(); close ()
 		| SCHEDULE (event_name, time) -> op "schedule"; close() (*vide car incompris*)
 		| CANCEL (event_name) -> op "cancel"; close()
+		| INTERRUPT (c) 					-> op "interrupt"; const_of c; close()
 	and scase_of (c, s) =
 		op "case"; expr_of c; com (); stat_of s; close(); com () in
 			

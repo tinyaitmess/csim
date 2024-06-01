@@ -64,8 +64,9 @@ let is_stat_attr_recursive sp name =
 		| ERROR _
 		| SCHEDULE _
 		| CANCEL _
-		| LOCAL _ ->
-			false
+		| LOCAL _
+		| INTERRUPT _
+		-> false
 		| SEQ(s1, s2) ->
 			(find_occurence str s1) || (find_occurence str s2)
 		| EVAL(n, attr) ->
@@ -503,6 +504,7 @@ let rec substitute_in_stat name op statement =
 		SCHEDULE (event_name, substitute_in_expr name op time)
 	| CANCEL (event_name) ->
 		CANCEL (event_name)
+	| INTERRUPT c -> INTERRUPT c
 
 
 (**
@@ -547,6 +549,7 @@ let rec change_name_of_var_in_stat sta var_name new_name =
 		SCHEDULE (event_name, change_name_of_var_in_expr time var_name new_name)
 	| CANCEL (event_name) ->
 		CANCEL (event_name)
+	| INTERRUPT c -> INTERRUPT c
 
 
 (**
@@ -1117,7 +1120,8 @@ let add_attr_to_spec sp param =
 			| LOCAL _
 			| SCHEDULE _
 			| CANCEL _
-			| EVAL _ ->
+			| EVAL _
+			| INTERRUPT _ ->
 				st
 			| SEQ(s1, s2) ->
 				SEQ(aux s1 name, aux s2 name)
