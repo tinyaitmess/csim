@@ -14,5 +14,5 @@ reg LEDR[1, word]
 
 port LEDP(1,word)
     on_input = {
-        LEDP = LEDR;
+        LEDR = LEDP;
     }
