@@ -169,8 +169,7 @@ static void on_input_LEDP(csim_port_inst_t *inst, csim_value_type_t type, csim_v
 	
 	
 	
-	LEDP_SET(_LEDR);
-
+	_LEDR = LEDP;
 }
 
 static void on_update_LEDP(csim_inst_t *inst) {
