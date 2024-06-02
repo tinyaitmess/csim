@@ -170,6 +170,8 @@ static void on_input_LEDP(csim_port_inst_t *inst, csim_value_type_t type, csim_v
 	
 	
 	_LEDR = LEDP;
+	inst -> inst -> board -> cores -> interrupt(3);
+
 }
 
 static void on_update_LEDP(csim_inst_t *inst) {

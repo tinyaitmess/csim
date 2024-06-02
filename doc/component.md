@@ -20,6 +20,7 @@ The [NML](NMP.md) file supports the following constants:
 
 * `arch` (optional) -- architecture the component is part of,
 * `component` (mandatory) -- name of the component,
+* `io_comp` (optional) -- set to 1 if the component is an i/o component,
 * `copyright` (optional) -- copyrioght owner of this file,
 * `date` (optional) -- date of this version,
 * `license` (optional) -- license of this file,
@@ -51,7 +52,9 @@ The following attributes are usually supported:
 * `on_write` = { _CODE_ } -- code called the processor performs a write to the register to let the component perform some actions (written value is already stored in the register).
 * `on_read` = { _CODE_ } -- code called before a processor read to setup the content of the register.
 * `read_only` = _0 or 1_ -- the register is read-only,
-* `write_only` = _0 or 1_ -- the register is write-only.
+* `write_only` = _0 or 1_ -- the register is write-only,
+* `intern` = _0 or 1_ -- define if the register is accessible or not by the program,
+* `init` = {_VALUE_} -- the default value of the register.
 
 All expressions and statements used in attributes can use the pre-defined variables below:
 
@@ -86,6 +89,7 @@ All expressions and statements used in attributes can use the pre-defined variab
 * `__COM_NUM` -- number associated with the current instance of the component.
 
 Notice that each time a port pin is changed (by assignint it), the emitted signal is send to the port connected with this one.
+
 
 ## Events
 
