@@ -17,9 +17,10 @@ void button_reset(csim_inst_t *inst) {
 void button_construct(csim_inst_t *inst, csim_confs_t confs) {
 	button_inst_t *i = (button_inst_t *)inst;
 	button_reset(inst);
-	for(int j = 0; confs[j] != NULL; j += 2)
+	for(int j = 0; confs[j] != NULL; j += 2) {
 		if(strcmp(confs[j], "key") == 0)
 			sscanf(confs[j + 1], "%c", &i->key);
+	}
 }
 
 void button_destruct(csim_inst_t *c) {
@@ -62,6 +63,19 @@ static void button_on_key(char key, csim_iocomp_inst_t *inst) {
 	}
 }
 
+void button_get_state(csim_iocomp_inst_t *inst, uint32_t *state) {
+	button_inst_t *i = (button_inst_t *)inst;
+	*state = i->pushed;
+}
+
+void button_set_state(csim_iocomp_inst_t *inst, uint32_t *state) {
+	button_inst_t *i = (button_inst_t *)inst;
+	if(*state != i->pushed) {
+		i->pushed = *state;
+		csim_send_digital(&inst->inst, &button_ports[0], i->pushed);
+	}
+}
+
 csim_iocomp_t button_component = {
 	{
 		"button",
@@ -77,7 +91,9 @@ csim_iocomp_t button_component = {
 		button_reset
 	},
 	button_display,
-	button_on_key
+	button_on_key,
+	button_get_state,
+	button_set_state
 };
 
 int button_get(csim_inst_t *inst) {

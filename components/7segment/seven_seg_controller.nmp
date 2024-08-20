@@ -1,0 +1,42 @@
+let component = "seven_seg_controller"
+let arch = "stm32"
+let license = "GPL"
+let copyright = "University of Toulouse 3"
+let date = "03/04/2024"
+
+type bit = card(1)
+type byte = card(8)
+type word = card(32)
+
+reg HEX03[1, word] /* the bytes */
+    offset = 0x0
+reg HEX45[1, word]
+    offset = 0x10
+
+
+port HEX0(1, byte)
+    on_update = {    
+    HEX0 = HEX03<0..7>;
+    }
+
+port HEX1(1, byte)
+    on_update = {    
+    HEX1 = HEX03<8..15>;
+    }
+port HEX2(1, byte)
+    on_update = {    
+    HEX2 = HEX03<16..23>;
+    }
+port HEX3(1, byte)
+    on_update = {    
+    HEX3 = HEX03<24..31>;
+    }
+port HEX4(1, byte)
+    on_update = {    
+    HEX4 = HEX45<0..7>;
+    }
+port HEX5(1, byte)
+    on_update = {    
+    HEX5 = HEX45<8..15>;
+    }
+ 

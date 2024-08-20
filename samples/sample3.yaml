@@ -1,19 +1,29 @@
 name: sample3
-components
-  LED0
+components:
+  CORE:
+    type: arm
+  LED0:
     type: led
     base: A0000000
-  LED1
+  LED1:
     type: led
     base: A0010000
-  LED2
+    x: 50
+    color: orange
+  LED2:
     type: led
     base: A0020000
-  LED3
+    x: 100
+    color: yellow
+  LED3:
     type: led
     base: A0030000
-  BUTTON
+    x: 150
+    color: "#00FF00"
+  BUTTON:
     type: button
     base: B0000000
     key: x
+    x: 100
+    y: 100
 

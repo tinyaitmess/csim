@@ -20,6 +20,7 @@
  */
 
 #include <assert.h>
+#include <memory.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -255,7 +256,7 @@ void csim_io_remove(csim_reg_t * reg, csim_inst_t *inst) {
 /**
  * Initialize the board.
  * @param name	Board name.
- * @param mem	Memory to use.
+ * @param mem	Memory to use (possibly NULL and then derived from core).
  * @return		Built board (or null if allocation fails).
  * @ingroup csim
  */
@@ -269,7 +270,7 @@ csim_board_t *csim_new_board(const char *name, csim_memory_t *mem) {
 	board->iocomps = NULL;
 	board->clock = 0;
 	board->date = 0;
-	board->evts = 0;
+	board->evts = NULL;
 	board->level = CSIM_INFO;
 	board->mem = mem;
 	board->log = csim_log;
@@ -319,6 +320,16 @@ csim_inst_t *csim_new_component(csim_board_t *board, csim_component_t *comp, con
 	return csim_new_component_ext(board, comp, name, base, confs);
 }
 
+/**
+ * Record the registers of the component in the address space.
+ * @param board		Current board.
+ * @param inst		Component instance.
+ */
+static void csim_record_regs(csim_board_t *board, csim_inst_t *inst) {
+	csim_component_t *comp = inst->comp;
+	for(int j = 0; j < comp->reg_cnt; j++)
+		csim_io_add(&comp->regs[j], inst);
+}
 
 /**
  * Build a new instance of the given component and add it to the board.
@@ -366,7 +377,7 @@ csim_inst_t *csim_new_component_ext(csim_board_t *board, csim_component_t *comp,
 		board->cores = ci;
 		if(board->clock == 0)
 			board->clock = cc->clock;
-		else {
+		else if(cc->clock != 0) {
 			if(board->clock != cc->clock)
 				board->log(board, CSIM_FATAL, "ERROR: current version only supports multiple core with same clock.");
 		}
@@ -378,15 +389,21 @@ csim_inst_t *csim_new_component_ext(csim_board_t *board, csim_component_t *comp,
 		ioi->next = board->iocomps;
 		board->iocomps = ioi;
 	}
-	
-	/* record the IO registers */
-	for(int j = 0; j < comp->reg_cnt; j++)
-		csim_io_add(&comp->regs[j], i);
-	
+
 	/* call preparation of the instance */
 	if(CSIM_DEBUG >=board->level)
 		board->log(board, CSIM_INFO, "new instance %s of %s at %08x", name, comp->name, name);
 	comp->construct(i, confs);
+
+	/* record the IO registers */
+	if(board->mem != NULL)
+		csim_record_regs(board, i);
+	else if(comp->type == CSIM_CORE) {
+		board->mem = csim_core_memory((csim_core_inst_t *)i);
+		for(csim_inst_t *ui = board->insts; ui != NULL; ui = ui->next)
+			csim_record_regs(board, ui);
+	}
+
 	return i;
 }
 
@@ -401,6 +418,34 @@ void csim_delete_component(csim_inst_t *inst) {
 	b->log(b, CSIM_INFO, "deleting %s (%s)", inst->name, inst->comp->name);
 	inst->comp->destruct(inst);
 	free(inst);
+}
+
+
+/**
+ * Find a component instance by its name.
+ * @param board		Board to look in.
+ * @param name		Name of looked component instance.
+ * @return			Found instance or NULL.
+ */
+csim_inst_t *csim_find_instance(csim_board_t *board, const char *name) {
+	for(csim_inst_t *i = board->insts; i != NULL; i = i->next)
+		if(strcmp(i->name, name) == 0)
+			return i;
+	return NULL;
+}
+
+
+/**
+ * Look for a port matching the name in the component.
+ * @param comp		Component to look for port in.
+ * @param name		Name of the looked port.
+ * @return			Found port or NULL.
+ */
+csim_port_t*csim_find_port(csim_component_t *comp, const char *name) {
+	for(int i = 0; i < comp->port_cnt; i++)
+		if(strcmp(comp->ports[i].name, name) == 0)
+			return &comp->ports[i];
+	return NULL;
 }
 
 
@@ -572,7 +617,7 @@ void csim_record_event(csim_board_t *board, csim_evt_t *evt) {
  * @ingroup csim
  */
 void csim_cancel_event(csim_board_t *board, csim_evt_t *evt) {
-	if(board->evts == evt) {
+	if(board->evts->inst == evt->inst && board->evts->trigger == evt->trigger) {
 		evt->next->prev = NULL;
 		board->evts = evt->next;
 		evt->next = NULL;
@@ -595,6 +640,7 @@ void csim_cancel_event(csim_board_t *board, csim_evt_t *evt) {
 void csim_run(csim_board_t *board, csim_time_t time) {
 	csim_date_t end = board->date + time;
 	while(board->date < end) {
+		csim_log(board, CSIM_DEBUG, "next");
 		
 		while(board->evts != NULL && board->evts->date <= board->date) {
 			csim_evt_t *evt = board->evts;
@@ -619,5 +665,30 @@ void csim_run(csim_board_t *board, csim_time_t time) {
 		
 		board->date++;
 	}
+}
+
+/**
+ * Provides a default implementation for IO get/set_state function pointer.
+ * @param inst	IO component instance.
+ * @param state	Buffer to store state inside.
+ * @param size	Size of state in pairs of uint32_t.
+ */
+void csim_no_state(csim_iocomp_inst_t *inst, uint32_t *state) {
+}
+
+
+extern csim_component_t *comps[];
+
+/**
+ * Find a component by its name, possibly using some mechanism to get access
+ * to it.
+ * @param name	Component name.
+ * @return		Component definition or NULL.
+ */
+csim_component_t *csim_find_component(const char *name) {
+	for(int i = 0; comps[i] != NULL; i++)
+		if(strcmp(name, comps[i]->name) == 0)
+			return comps[i];
+	return NULL;
 }
 

@@ -35,7 +35,7 @@ void led_destruct(csim_inst_t *i) { }
  * @ingroup led
  */
 void led_update(csim_port_inst_t *inst, csim_value_type_t type, csim_value_t val) {
-	led_inst_t *i = (led_inst_t *)inst;
+	led_inst_t *i = (led_inst_t *)inst->inst;
 	i->state = val.digital;
 }
 
@@ -85,6 +85,17 @@ static int led_display(char *buf, csim_iocomp_inst_t *inst) {
 static void led_on_key(char key, csim_iocomp_inst_t *inst) {
 }
 
+void led_get_state(csim_iocomp_inst_t *inst, uint32_t *state) {
+	led_inst_t *i = (led_inst_t *)inst;
+	*state = i->state;
+}
+
+void led_set_state(csim_iocomp_inst_t *inst, uint32_t *state) {
+	led_inst_t *i = (led_inst_t *)inst;
+	if(*state != i->state)
+		i->state = *state;
+}
+
 /**
  * @ingroup led
  */
@@ -103,7 +114,9 @@ csim_iocomp_t led_component = {
 		led_reset
 	},
 	led_display,
-	led_on_key
+	led_on_key,
+	led_get_state,
+	led_set_state
 };
 
 /**

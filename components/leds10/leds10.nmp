@@ -1,0 +1,19 @@
+let component = "leds10"
+let arch = "stm32"
+let license = "GPL"
+let copyright = "University of Toulouse 3"
+let date = "03/04/2024"
+let io_comp = 1
+
+type bit = card(1)
+type word = card(32)
+
+reg LEDR[1, word]
+    offset = 0x0
+    init = 3
+
+port LEDP(1,word)
+    on_input = {
+        LEDR = LEDP;
+        interrupt 3;
+    }

@@ -1,5 +1,5 @@
 /*
- * Component simulator test program
+ * Component simulator main header
  * Copyright (c) 2019, IRIT - UPS <casse@irit.fr>
  *
  * This file is part of GLISS2.
@@ -20,36 +20,40 @@
  */
 
 #include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <termio.h>
-#include <signal.h>
 #include <string.h>
-#include <unistd.h>
-#include <sys/select.h>
 
 #define CSIM_INSIDE
 #include "mem.h"
 #include "csim.h"
 
 #include "yaml.h"
-#include <arm/api.h>
-#include <arm/loader.h>
 
 #include "led.h"
 #include "button.h"
+#include "seven_seg_controller.h"
+#include "seven_seg_display.h"
+#include "leds10.h"
+#include "timer.h"
+#include "arm_core.h"
 
-#define INST_SLICE	10
 
-/****** Board ******/
-
-csim_component_t *comps[32] = {
+/**
+ * Available components.
+ */
+csim_component_t *comps[] = {
 	&led_component.comp,
 	&button_component.comp,
+	&seven_seg_controller_component,
+	&timer_component,
+	&seven_seg_display_component.comp,
+	&leds10_component,
+	&arm_component.comp,
 	NULL
 };
 
+/**
+ * Loader structure for YAML parsing.
+ */
 typedef struct {
 	enum {
 		TOP,
@@ -68,8 +72,6 @@ typedef struct {
 	int conf_cnt;
 	char *confs[32];
 } loader_t;
-
-int VERBOSE = 0;
 
 /**
  * Scan a port in the form INSTANCE.PORT.
@@ -244,9 +246,9 @@ static void on_end(void *data) {
  * In case of error, display it and stop the program.
  * @param path		Path to read board from.
  * @param mem		Memory to use for I/O registers.
- * @return			Created board.
+ * @return			Created board or NULL if there is an error.
  */
-csim_board_t *load_board(const char *path, csim_memory_t *mem) {
+csim_board_t *csim_load_board(const char *path, csim_memory_t *mem) {
 	loader_t loader = {
 		TOP, NULL, mem, "anonymous", NULL, '\0', 0,
 		NULL, NULL, NULL, NULL,
@@ -258,234 +260,10 @@ csim_board_t *load_board(const char *path, csim_memory_t *mem) {
 	handler.on_item = on_item;
 	handler.on_end = on_end;
 	int num = yaml_parse(&handler, path, &loader);
-	if(num != 0) {
-		fprintf(stderr, "ERROR:%s:%d: syntax error.\n", path, num);
-		exit(1);
+	if(num == 0)
+		return loader.board;
+	else {
+		csim_delete_board(loader.board);
+		return NULL;
 	}
-	return loader.board;
 }
-
-
-/****** Simulator ******/
-void reset_console() {
-	struct termios t;
-	tcgetattr(0, &t);
-	t.c_lflag |= ECHO | ICANON;
-	tcsetattr(0, TCSANOW, &t);
-	printf("\033[?25h\n");
-	fflush(stdout);
-}
-
-void on_control_c(int x) {
-	reset_console();
-	exit(0);
-}
-
-void init_console() {
-	struct termios t;
-	tcgetattr(0, &t);
-	t.c_lflag &= ~(ECHO | ICANON);
-	tcsetattr(0, TCSANOW, &t);
-
-	atexit(reset_console);
-	signal(SIGINT, on_control_c);
-	printf("\033[?25l");
-}
-
-//csim_inst_t *led, *button;
-arm_sim_t *sim;
-
-
-/**
- * Print the state.
- */
-void print_state(csim_board_t *board, int clear) {
-	static char buf[256] = "";
-	static char cbuf[256];
-	static int buf_size = 0;
-
-	// move back to the start of the line
-	if(clear) {
-		memset(cbuf, '\b', buf_size);
-		cbuf[buf_size] = '\0';
-		fputs(cbuf, stdout);
-	}
-
-	// generate the content
-	char *p = buf;
-	for(csim_iocomp_inst_t *i = board->iocomps; i != NULL; i = i->next) {
-		p += ((csim_iocomp_t *)(i->inst.comp))->display(p, i);
-		*p++ = ' ';
-	}
-
-	// generate the instruction
-	p += sprintf(p, "%08x ", arm_next_addr(sim));
-	arm_inst_t *inst = arm_next_inst(sim);
-	arm_disasm(p, inst);
-	arm_free_inst(inst);
-
-	// compute the size
-	int size = p - buf + strlen(p);
-	if(clear) {
-		while(size < buf_size) {
-			buf[size] = ' ';
-			size++;
-		}
-		buf[size] = '\0';
-	}
-	buf_size = size;
-
-	fputs(buf, stdout);
-}
-
-/**
- * Display the options.
- */
-void print_help() {
-	fprintf(stderr, "SYNTAX: test2 FICHIER.elf\n");
-	fprintf(stderr, "\t-b, -board BOARD-PATH: select the board descriptor to use.\n");
-	fprintf(stderr, "\t-h, -help: displays help message.\n");
-	fprintf(stderr, "\t-v: verbose mode.\n");
-}
-
-/**
- * Application entry.
- */
-int main(int argc, const char *argv[]) {
-	const char *exec = NULL, *board_path = NULL;
-
-	/* parse arguments */
-	for(int i = 1; i < argc; i++) {
-		if(argv[i][0] != '-') {
-			if(exec != NULL) {
-				print_help();
-				fprintf(stderr, "ERROR: several executable provided: %s\n", argv[1]);
-				exit(1);
-			}
-			else
-				exec = argv[i];
-		}
-		else if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "-help") == 0) {
-			print_help();
-			exit(0);
-		}
-		else if(strcmp(argv[i], "-b") == 0 || strcmp(argv[i], "-board") == 0) {
-			i++;
-			if(i >= argc) {
-				print_help();
-				fprintf(stderr, "ERROR: -b, -board requires an argument.\n");
-				exit(1);
-			}
-			board_path = argv[i];
-		}
-		else if(strcmp(argv[i], "-v") == 0)
-			VERBOSE = 1;
-		else {
-			print_help();
-			fprintf(stderr, "ERROR: unknown option: %s\n", argv[i]);
-			exit(1);
-		}
-	}
-
-	/* check arguments */
-	if(exec == NULL) {
-		print_help();
-		fprintf(stderr, "ERROR: executable needed!\n");
-		exit(1);
-	}
-
-	/* load the executable */
-	arm_loader_t *loader = arm_loader_open(exec);
-	if(loader == NULL) {
-		fprintf(stderr, "ERROR: cannot load %s\n", exec);
-		exit(1);
-	}
-
-	/* look for _start and _exit */
-	arm_address_t _start, _exit;
-	int start_done = 0, exit_done = 0;
-	for(int i = 0; i < arm_loader_count_syms(loader); i++) {
-		arm_loader_sym_t sym;
-		arm_loader_sym(loader, i, &sym);
-		if(strcmp(sym.name, "_start") == 0) {
-			_start = sym.value;
-			start_done = 1;
-		}
-		else if(strcmp(sym.name, "_exit") == 0) {
-			_exit = sym.value;
-			exit_done = 1;
-		}
-		if(start_done && exit_done)
-			break;
-	}
-	if(!start_done) {
-		fprintf(stderr, "ERROR: no _start symbol!\n");
-		exit(1);
-	}
-
-	/* build the ARMv5 simulator */
-	arm_platform_t *pf = arm_new_platform();
-	arm_load(pf, loader);
-	arm_state_t *state = arm_new_state(pf);
-	sim = arm_new_sim(state, _start, _exit);
-
-	/* build the board */
-	csim_board_t *board;
-	char path[256];
-	if(board_path == NULL) {
-		int l = strlen(argv[1]);
-		if(strcmp(".elf", argv[1] + l - 4) == 0) {
-			strncpy(path, argv[1], l-4);
-			path[l-4] = '\0';
-		}
-		else
-			strcpy(path, argv[1]);
-		strcat(path, ".yaml");
-		if(access(path, R_OK) == 0)
-			board_path = path;
-	}
-	if(board_path == NULL) {
-		char *confs[] = { "key", "a", NULL };
-		board = csim_new_board("default", arm_get_memory(pf, ARM_MAIN_MEMORY));
-		csim_new_component(board, &led_component.comp, "led", 0xA0000000);
-		csim_new_component_ext(board, &button_component.comp, "button", 0xB0000000, confs);
-		board->level = CSIM_ERROR;
-	}
-	else
-		board = load_board(board_path, arm_get_memory(pf, ARM_MAIN_MEMORY));
-
-	// initialize input
-	fd_set set;
-	struct timeval tv;
-	tv.tv_sec = 0;
-	tv.tv_usec = 0;
-	init_console();
-
-	// perform I/O
-	print_state(board, 0);
-	while(1) {
-
-		// update display
-		print_state(board, 1);
-
-		// get the key
-		FD_ZERO(&set);
-		FD_SET(0, &set);
-		int n = select(1, &set, NULL, NULL, &tv);
-		if(n != 0) {
-			char key;
-			read(0, &key, 1);
-			for(csim_iocomp_inst_t *i = board->iocomps; i != NULL; i = i->next)
-				((csim_iocomp_t *)i->inst.comp)->on_key(key, i);
-		}
-
-		// simulate the code
-		for(int i = 0; i < INST_SLICE && !arm_is_sim_ended(sim); i++)
-			arm_step(sim);
-
-		// run the board
-		csim_run(board, 1);
-	}
-	return 0;
-}
-
