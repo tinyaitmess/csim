@@ -76,6 +76,9 @@ typedef enum csim_level_t {
 
 #define CSIM_STATE_STOP	0
 
+typedef uint32_t csim_reg_flags_t;
+#define CSIM_INTERN	0x0001
+
 typedef struct csim_component_t csim_component_t;
 typedef struct csim_reg_t csim_reg_t;
 typedef struct csim_port_t csim_port_t;
@@ -99,7 +102,7 @@ struct csim_reg_t {
 	uint32_t size;
 	uint32_t count;
 	uint32_t stride;
-	uint32_t flags;
+	csim_reg_flags_t flags;
 	csim_rtype_t type;
 	void (*make_name)(csim_inst_t *inst, int num, char *buf, int size);
 	void (*display)(csim_inst_t *inst, int num, char *buf, int size);
@@ -182,7 +185,7 @@ struct csim_core_t {
 	csim_addr_t (*pc)(csim_core_inst_t *inst);
 	void (*disasm)(csim_core_inst_t *inst, csim_addr_t addr, char buf[]);
 	void *(*memory)(csim_core_inst_t *inst);
-	void (*interrupt)(csim_core_inst_t *_inst,int codeInterrupt); 
+	void (*interrupt)(csim_core_inst_t *_inst,int codeInterrupt);
 };
 
 struct csim_core_inst_t {
@@ -242,6 +245,7 @@ const char *csim_unit_name(csim_port_type_t type);
 csim_board_t *csim_new_board(const char *name, csim_memory_t *mem);
 void csim_delete_board(csim_board_t *board);
 csim_board_t *csim_load_board(const char *path, csim_memory_t *mem);
+void csim_reset_board(csim_board_t *board);
 
 csim_component_t *csim_find_component(const char *name);
 csim_inst_t *csim_new_component(csim_board_t *board, csim_component_t *comp, const char *name, csim_addr_t base);

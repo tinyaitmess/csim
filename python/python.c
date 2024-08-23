@@ -45,6 +45,15 @@ delete_board(PyObject *self, PyObject *args) {
 }
 
 static PyObject *
+reset_board(PyObject *self, PyObject *args) {
+	PyObject *board;
+	if(!PyArg_ParseTuple(args, "O", &board))
+		return NULL;
+	csim_reset_board(TPTR(csim_board_t, board));
+	RETURN_NONE;
+}
+
+static PyObject *
 run(PyObject *self, PyObject *args) {
 	PyObject *board;
 	uint64_t time;
@@ -224,11 +233,77 @@ set_master_clock(PyObject *self, PyObject *args) {
 	RETURN_NONE;
 }
 
+static PyObject *
+get_register(PyObject *self, PyObject *args) {
+	PyObject *ocomp;
+	int index;
+	if(!PyArg_ParseTuple(args, "Oi", &ocomp, &index))
+		return NULL;
+	csim_component_t *comp = TPTR(csim_component_t, ocomp);
+	RETURN_TPTR(csim_reg_t, &comp->regs[index]);
+}
+
+static PyObject *
+register_info(PyObject *self, PyObject *args) {
+	PyObject *oreg;
+	if(!PyArg_ParseTuple(args, "O", &oreg))
+		return NULL;
+	csim_reg_t *reg = TPTR(csim_reg_t, oreg);
+	return Py_BuildValue("(siiiiii)",
+					reg->name,
+					reg->offset,
+					reg->size,
+					reg->count,
+					reg->stride,
+					reg->flags,
+					reg->type);
+}
+
+static PyObject *
+get_register_val(PyObject *self, PyObject *args) {
+	PyObject *oinst;
+	PyObject *oreg;
+	int index;
+	if(!PyArg_ParseTuple(args, "OOi", &oinst, &oreg, &index))
+		return NULL;
+	csim_inst_t *inst = TPTR(csim_inst_t, oinst);
+	csim_reg_t *reg = TPTR(csim_reg_t, oreg);
+	RETURN_INT(reg->get(inst, index));
+}
+
+static PyObject *
+set_register_val(PyObject *self, PyObject *args) {
+	PyObject *oinst;
+	PyObject *oreg;
+	int index;
+	uint32_t val;
+	if(!PyArg_ParseTuple(args, "OOii", &oinst, &oreg, &index, &val))
+		return NULL;
+	csim_inst_t *inst = TPTR(csim_inst_t, oinst);
+	csim_reg_t *reg = TPTR(csim_reg_t, oreg);
+	reg->set(inst, index, val);
+	RETURN_NONE;
+}
+
+static PyObject *
+version(PyObject *self, PyObject *args) {
+	RETURN_INT(1);
+}
+
+static PyObject *
+core_inst(PyObject *self, PyObject *args) {
+	PyObject *oinst;
+	if(!PyArg_ParseTuple(args, "O", &oinst))
+		return NULL;
+	csim_core_inst_t *inst = TPTR(csim_core_inst_t, oinst);
+	RETURN_TPTR(csim_inst_t, &inst->inst);
+}
 
 static PyMethodDef csim_methods[] = {
 	FUN(new_board, "(name, memory) Create a new board."
 		"memory may be None. Return the board."),
 	FUN(delete_board, "(board) Delete the given board"),
+	FUN(reset_board, "(board): reset the board."),
 	FUN(run, "(board, time) Run the board during time cycles"),
 	FUN(load_board, "(path) Load the given executable and build/return the board"),
 	FUN(get_core, "(board) Get the execution core of the board (may return None if there is no core)."),
@@ -244,6 +319,12 @@ static PyMethodDef csim_methods[] = {
 	FUN(connect, "(instance 1, port 1, instance 2, port 2) Connect the port of instance 1 with the port of instance 2."),
 	FUN(set_log_level, "(board, level) Set the log level (level is an integer as CSIM_NOLOG=0, CSIM_DEBUG=1, etc)."),
 	FUN(set_master_clock, "(board, clock) Set the master clock of the board."),
+	FUN(get_register, "(board, index) Get the register for the given index."),
+	FUN(register_info, "(register) Return register information (name, offset, size, count, stride, flags, type)."),
+	FUN(get_register_val, "(instance, register, index) Get the value of a register."),
+	FUN(set_register_val, "(instance, register, index, value) Set the value of a register."),
+	FUN(core_inst, "(core instance) Get the component instance of the passed core instance."),
+	FUN(version, "Get version."),
 	{NULL, NULL, 0, NULL}
 };
 

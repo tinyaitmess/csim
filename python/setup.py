@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from distutils.core import setup, Extension
 
 module = Extension(

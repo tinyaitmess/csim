@@ -42,7 +42,7 @@ typedef struct {
 	arm_sim_t *sim;
 } arm_core_inst_t;
 
-static csim_reg_t regs[] = {};
+//static csim_reg_t regs[] = {};
 static csim_port_t ports[] = {};
 
 static void construct(csim_inst_t *inst, csim_confs_t confs) {
@@ -58,6 +58,9 @@ static void destruct(csim_inst_t *inst) {
 }
 
 static void reset(csim_inst_t *inst) {
+	arm_core_inst_t *i = (arm_core_inst_t *)inst;
+	arm_reset_platform(i->pf);
+	arm_reset_state(i->state);
 }
 
 static void step(csim_core_inst_t *_inst) {
@@ -113,12 +116,42 @@ void interrupt(csim_core_inst_t *_inst,int codeInterrupt) {
 	fprintf(stderr,"Interruption numéro : %d\nNouveau pc = %d\n",codeInterrupt,pc(_inst));
 }
 
+static void arm_make_R(csim_inst_t *inst, int num, char *buf, int size) {
+	snprintf(buf, size, "R%d", num);
+}
+
+static csim_word_t arm_get_R(csim_inst_t *_inst, int num) {
+	arm_core_inst_t *inst = (arm_core_inst_t *)_inst;
+	return inst->state->GPR[num];
+}
+
+static void arm_set_R(csim_inst_t *_inst, int num, csim_word_t val) {
+	arm_core_inst_t *inst = (arm_core_inst_t *)_inst;
+	inst->state->GPR[num] = val;
+}
+
+static csim_word_t arm_get_CPSR(csim_inst_t *_inst, int num) {
+	arm_core_inst_t *inst = (arm_core_inst_t *)_inst;
+	return inst->state->Ucpsr;
+}
+
+static void arm_set_CPSR(csim_inst_t *_inst, int num, csim_word_t val) {
+	arm_core_inst_t *inst = (arm_core_inst_t *)_inst;
+	inst->state->Ucpsr = val;
+}
+
+static csim_reg_t arm_regs[] = {
+	{ "R", 0, 4, 16, 1, CSIM_INTERN, CSIM_INT, arm_make_R, NULL, NULL, NULL, arm_get_R, arm_set_R },
+	{ "CPSR", 0, 4, 1, 1, CSIM_INTERN, CSIM_INT, NULL, NULL, NULL, NULL, arm_get_CPSR, arm_set_CPSR }
+};
+
+
 csim_core_t arm_component = {
 	{
 		"arm",
 		CSIM_CORE,
 		1,		// version
-		regs, 0,
+		arm_regs, 2,
 		ports, 0,
 		sizeof(arm_core_inst_t),
 		construct,

@@ -90,7 +90,7 @@ typedef enum {
 #else	/* NO_MEM */
 
 		typedef struct csim_memory_t csim_memory_t;
- 
+
 	/* creation function */
 	csim_memory_t *csim_mem_new();
 	void csim_mem_delete(csim_memory_t *memory);
@@ -105,7 +105,7 @@ typedef enum {
 	double csim_mem_readd(csim_memory_t *, csim_addr_t);
 	long double csim_mem_readld(csim_memory_t *, csim_addr_t);
 	void csim_mem_read(csim_memory_t *memory, csim_addr_t, void *buf, size_t size);
- 
+
 	/* write functions */
 	void csim_mem_write8(csim_memory_t *, csim_addr_t, uint8_t);
 	void csim_mem_write16(csim_memory_t *, csim_addr_t, uint16_t);
