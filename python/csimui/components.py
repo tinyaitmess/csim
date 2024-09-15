@@ -74,7 +74,7 @@ class Board:
 	def run(self, time = 10):
 		csim.run(self.board, time)
 
-	def __init__(self, board_path, bin_path):
+	def __init__(self, board_path, bin_path=None):
 		self.board_path = board_path
 		self.bin_path = bin_path
 		self.components = []
@@ -123,9 +123,16 @@ class Board:
 				(to_inst, to_port) = self.parse_port(to_)
 				csim.connect(from_inst, from_port, to_inst, to_port)
 
-		# load the code
-		if self.core == None:
+		# check for core
+		if self.core is None:
 			raise util.BoardError("no core defined!")
+
+		# load the code
+		if bin_path is not None:
+			self.load_bin(bin_path)
+
+	def load_bin(self, path):
+		"""Load the binary in memory."""
 		self.core.load(bin_path)
 
 	def parse_port(self, text):
