@@ -43,7 +43,7 @@
  * @typedef csim_reg_t
  * Describe a register.
  * @ingroup csim
- * 
+ *
  * @var csim_reg_t::name
  * Name of the register.
  * @var csim_reg_t::offset
@@ -172,34 +172,52 @@ static void csim_on_io(csim_addr_t addr, int size, void *data, int access, void 
 				board->log(board, CSIM_ERROR, "bad IO access at %08x: size=%d and should be %d", addr, size, p->reg->size);
 			else
 				switch(p->reg->size) {
-					
+
 				case 1:
 					if(access == CSIM_MEM_READ)
 						*(int8_t *)data = p->reg->read(p->inst, i);
 					else
 						p->reg->write(p->inst, i, *(int8_t *)data);
 					break;
-				
+
 				case 2:
 					if(access == CSIM_MEM_READ)
 						*(int16_t *)data = p->reg->read(p->inst, i);
 					else
 						p->reg->write(p->inst, i, *(int16_t *)data);
 					break;
-				
+
 				case 4:
 					if(access == CSIM_MEM_READ)
 						*(int32_t *)data = p->reg->read(p->inst, i);
 					else
 						p->reg->write(p->inst, i, *(int32_t *)data);
 					break;
-				
+
 				default:
 					assert(0);
 				}
 		}
 }
 
+
+/**
+ * Install a memory a component register.
+ * @param board		Current board.
+ * @param reg		Register.
+ * @param addr		Address.
+ * @ingroup csim
+ */
+static void csim_io_install(
+	csim_board_t *board,
+	csim_reg_t *reg,
+	csim_addr_t addr
+) {
+	csim_addr_t pa = addr & ~(CSIM_PAGE_SIZE - 1);
+	if(csim_get_callback_data(board->mem, pa) == NULL)
+		csim_set_range_callback(board->mem, pa, pa + reg->size - 1, csim_on_io, board);
+
+}
 
 /**
  * Add IO entry for the given registers in the given instance.
@@ -210,7 +228,7 @@ static void csim_on_io(csim_addr_t addr, int size, void *data, int access, void 
 void csim_io_add(csim_reg_t *reg, csim_inst_t *inst) {
 	csim_board_t *board = inst->board;
 	for(int i = 0; i < reg->count; i++) {
-		
+
 		/* build the IO entry */
 		csim_addr_t a = inst->base + i * reg->stride + reg->offset;
 		int h = CSIM_IO_HASH(a);
@@ -220,11 +238,9 @@ void csim_io_add(csim_reg_t *reg, csim_inst_t *inst) {
 		io->inst = inst;
 		io->next = board->ios[h];
 		board->ios[h] = io;
-		
+
 		/* install the IO in memory */
-		csim_addr_t pa = a & ~(CSIM_PAGE_SIZE - 1);
-		if(csim_get_callback_data(board->mem, pa) == NULL)
-			csim_set_range_callback(board->mem, pa, pa + reg->size - 1, csim_on_io, board);
+		csim_io_install(board, reg, a);
 	}
 }
 
@@ -278,20 +294,21 @@ csim_board_t *csim_new_board(const char *name, csim_memory_t *mem) {
 	return board;
 }
 
+
 /**
  * Delete the given board.
  * @param board		Board to delete.
  * @ingroup csim
  */
 void csim_delete_board(csim_board_t *board) {
-	
+
 	csim_inst_t *i = board->insts;
 	while(i != NULL) {
 		csim_inst_t *next = i->next;
 		csim_delete_component(i);
 		i = next;
 	}
-	
+
 	for(int i = 0; i < CSIM_IO_SIZE; i++) {
 		csim_io_t *p = board->ios[i];
 		while(p != NULL) {
@@ -303,6 +320,24 @@ void csim_delete_board(csim_board_t *board) {
 
 	board->log(board, CSIM_INFO, "deleting board %s", board->name);
 	free(board);
+}
+
+
+/**
+ * Reset the state of the board keeping the components.
+ * @param board	Board to reset.
+ * @ingroup csim
+ */
+void csim_reset_board(csim_board_t *board) {
+
+	/* reset all component instances */
+	for(csim_inst_t *i = board->insts; i != NULL; i = i->next)
+		i->comp->reset(i);
+
+	/* re-install callbacks */
+	for(int i = 0; i < CSIM_IO_SIZE; i++)
+		for(csim_io_t *p = board->ios[i]; p != NULL; p = p->next)
+			csim_io_install(board, p->reg, p->addr);
 }
 
 
@@ -328,6 +363,7 @@ csim_inst_t *csim_new_component(csim_board_t *board, csim_component_t *comp, con
 static void csim_record_regs(csim_board_t *board, csim_inst_t *inst) {
 	csim_component_t *comp = inst->comp;
 	for(int j = 0; j < comp->reg_cnt; j++)
+		if((comp->regs[j].flags & CSIM_INTERN) == 0)
 		csim_io_add(&comp->regs[j], inst);
 }
 
@@ -336,7 +372,7 @@ static void csim_record_regs(csim_board_t *board, csim_inst_t *inst) {
  *
  * confs is a null-terminated array of strings organized by pairs which
  * first member is the entry name and the second the entry value.
- * 
+ *
  * @param board	Board to add to.
  * @param comp	Component to build an instance for.
  * @param name	Name of the instance.
@@ -460,7 +496,7 @@ csim_port_t*csim_find_port(csim_component_t *comp, const char *name) {
 void csim_connect(csim_inst_t *inst1, csim_port_t *port1, csim_inst_t *inst2, csim_port_t *port2) {
 	assert(inst1->board == inst2->board);
 	csim_board_t *b = inst1->board;
-	
+
 	/* compute pin index */
 	int i1 = port1 - inst1->comp->ports;
 	assert(0 <= i1 && i1 < inst1->comp->port_cnt);
@@ -480,7 +516,7 @@ void csim_connect(csim_inst_t *inst1, csim_port_t *port1, csim_inst_t *inst2, cs
 			b->log(b, CSIM_ERROR, "%s of %s is already connected!", port2->name, inst2->name);
 		return;
 	}
-	
+
 	/* connect the ports */
 	if(CSIM_DEBUG <= b->level)
 		b->log(b, CSIM_DEBUG, "connecting %s of %s with %s of %s", port1->name, inst1->name, port2->name, inst2->name);
@@ -535,7 +571,7 @@ void csim_mute(csim_inst_t *inst, csim_port_t *port) {
 	/* set mute if any */
 	if(CSIM_DEBUG <= b->level)
 		b->log(b, CSIM_DEBUG, "muting from %s of %s (%d)", port->name, inst->name, b->date);
-	
+
 	/* update if needed */
 	if(pi->link != NULL) {
 		csim_value_t v;
@@ -559,11 +595,11 @@ void csim_send_digital(csim_inst_t *inst, csim_port_t *port, int digit) {
 	int i = port - inst->comp->ports;
 	assert(0 <= i && i < inst->comp->port_cnt);
 	csim_port_inst_t *pi = &inst->ports[i];
-	
+
 	/* update the port */
 	if(CSIM_DEBUG <= b->level)
 		b->log(b, CSIM_DEBUG, "sending digital %d (%d) to %s of %s", digit, b->date, port->name, inst->name);
-	
+
 	/* update distant port if any */
 	if(pi->link != NULL) {
 		csim_value_t v;
@@ -582,7 +618,7 @@ void csim_send_digital(csim_inst_t *inst, csim_port_t *port, int digit) {
 void csim_record_event(csim_board_t *board, csim_evt_t *evt) {
 	if(CSIM_DEBUG >= board->level)
 		board->log(board, CSIM_DEBUG, "record event at %d from %s", evt->date, evt->inst->name);
-	
+
 	if(evt->date <= board->date) {
 		if(CSIM_DEBUG >= board->level)
 			board->log(board, CSIM_DEBUG, "trigger event from %s", evt->inst->name);
@@ -592,7 +628,7 @@ void csim_record_event(csim_board_t *board, csim_evt_t *evt) {
 		else
 			evt->date += evt->period;
 	}
-	
+
 	if(board->evts == NULL || evt->date < board->evts->date) {
 		evt->next = board->evts;
 		board->evts = evt;
@@ -641,7 +677,7 @@ void csim_run(csim_board_t *board, csim_time_t time) {
 	csim_date_t end = board->date + time;
 	while(board->date < end) {
 		csim_log(board, CSIM_DEBUG, "next");
-		
+
 		while(board->evts != NULL && board->evts->date <= board->date) {
 			csim_evt_t *evt = board->evts;
 			if(CSIM_DEBUG >= board->level)
@@ -656,13 +692,13 @@ void csim_run(csim_board_t *board, csim_time_t time) {
 				csim_record_event(board, evt);
 			}
 		}
-		
+
 		csim_core_inst_t *core = board->cores;
 		while(core != NULL) {
 			((csim_core_t *)core->inst.comp)->step(core);
 			core = core->next;
 		}
-		
+
 		board->date++;
 	}
 }

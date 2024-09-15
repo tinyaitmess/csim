@@ -11,7 +11,6 @@ typedef struct button_inst_t {
 void button_reset(csim_inst_t *inst) {
 	button_inst_t *i = (button_inst_t *)inst;
 	i->pushed = 0;
-	i->key = '\0';
 }
 
 void button_construct(csim_inst_t *inst, csim_confs_t confs) {

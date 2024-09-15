@@ -217,6 +217,7 @@ static void on_end(void *data) {
 			csim_new_component_ext(loader->board, type, loader->name, loader->base, loader->confs);
 			for(int i = 0; i < loader->conf_cnt; i++)
 				free(loader->confs[i]);
+			loader->conf_cnt = 0;
 
 			loader->state = IN_COMPS;
 		}

@@ -123,17 +123,17 @@ class Board:
 				(to_inst, to_port) = self.parse_port(to_)
 				csim.connect(from_inst, from_port, to_inst, to_port)
 
-		# check for core
+		# check for cores
 		if self.core is None:
 			raise util.BoardError("no core defined!")
 
-		# load the code
+		# if required, load the binary
 		if bin_path is not None:
 			self.load_bin(bin_path)
 
 	def load_bin(self, path):
-		"""Load the binary in memory."""
-		self.core.load(bin_path)
+		"""Load the binary."""
+		self.core.load(path)
 
 	def parse_port(self, text):
 		both = text.split('.')
