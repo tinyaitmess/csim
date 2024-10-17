@@ -6,7 +6,6 @@ YAML=$(PWD)/easy-yaml
 HEADERS=csim.h
 COMPONENTS= seven_seg_controller.c seven_seg_display.c led.c button.c leds10.c leds10.c timer.c
 SOURCES=csim.c yaml.c  csim-rt.o arm_core.c loader.c $(COMPONENTS)
-#ARMV5T=armv5t
 
 CFLAGS=-g3 -Wall -fPIC -I. -DCOMPAT
 LDFLAGS=-L. -lcsim
@@ -21,9 +20,19 @@ CLEAN += stm32-clean
 DISTCLEAN += stm32-distclean
 endif
 
+# Orchid options
+ifdef WITH_ORCHID
+ifdef (WITH_ORCHID,)
+ORCHID_PATH=Orchid
+ORCHID_SETUP=git-orchid
+else
+ORCHID_PATH=$(WITH_ORCHID)
+endif
+endif
+
 # ARMV5T option
 ifdef WITH_ARMV5T
-ifeq(WITH_ARMV5T,)
+ifeq (WITH_ARMV5T,)
 ARMV5T_PATH=armv5t
 ARMV5T_SETUP=armv5t-setup
 else
@@ -93,7 +102,9 @@ stm32-clean:
 
 # python rules
 python:
+ifdef WITH_ORCHID
 	cd python; make install
+endif
 
 
 # setup
@@ -101,7 +112,7 @@ GLISS_GIT = https://git.renater.fr/anonscm/git/gliss2/gliss2.git
 ARMV5T_GIT = https://git.renater.fr/anonscm/git/gliss2/armv5t.git
 ORCHID_GIT = https://github.com/hcasse/Orchid.git
 
-setup: $(ARMV5T_SETUP) git-orchid
+setup: $(ARMV5T_SETUP) $(ORCHID_SETUP)
 
 git-gliss:
 	@if [ -e gliss2 ]; then \
@@ -126,14 +137,6 @@ git-armv5t: git-gliss
 	fi
 	@cd armv5t; make
 
-config: config.mk setup
-
-config.mk:
-	cp config.in $@
-ifdef WITH_ARMV5T
-	echo "WITH_ARMV5T=$(WITH_ARMV5T)" >> $@
-endif
-
 git-orchid:
 	@if [ -e Orchid ]; then \
 		echo "Updating Orchid"; \
@@ -142,5 +145,20 @@ git-orchid:
 		echo "Downloading Orchid"; \
 		git clone $(ORCHID_GIT); \
 	fi
+
+config: config-force setup
+
+
+config.mk: config-force
+
+config-force:
+	cp config.in config.mk
+ifdef WITH_ARMV5T
+	echo "WITH_ARMV5T=$(WITH_ARMV5T)" >> config.mk
+endif
+ifdef WITH_ORCHID
+	echo "WITH_ORCHID=$(WITH_ORCHID)" >> config.mk
+endif
+
 
 
