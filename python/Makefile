@@ -11,5 +11,5 @@ all:
 run:
 	$(PYTHON) run.py ../samples/sample$(NUM).yaml ../samples/sample$(NUM).elf
 
-setup:
+install:
 	$(PYTHON) setup.py install --user

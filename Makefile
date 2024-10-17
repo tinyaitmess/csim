@@ -1,7 +1,6 @@
 -include config.mk
 
 # Configuration
-WITH_ARMV5T=1
 YAML=$(PWD)/easy-yaml
 
 HEADERS=csim.h
@@ -24,12 +23,17 @@ endif
 
 # ARMV5T option
 ifdef WITH_ARMV5T
-CFLAGS += -DNO_MEM -I$(ARMV5T)/include
-LDFLAGS +=  -L$(ARMV5T)/src -larm
+ifeq(WITH_ARMV5T,)
+ARMV5T_PATH=armv5t
+ARMV5T_SETUP=armv5t-setup
+else
+ARMV5T_PATH=$(WITH_ARMV5T)
+endif
+CFLAGS += -DNO_MEM -I$(ARMV5T_PATH)/include
+LDFLAGS += -L$(ARMV5T_PATH)/src -larm
 else
 SOURCES += mem.c
 endif
-
 
 # useful definitions
 OBJECTS=$(SOURCES:.c=.o)
@@ -88,6 +92,8 @@ stm32-clean:
 
 
 # python rules
+python:
+	cd python; make install
 
 
 # setup
@@ -95,10 +101,7 @@ GLISS_GIT = https://git.renater.fr/anonscm/git/gliss2/gliss2.git
 ARMV5T_GIT = https://git.renater.fr/anonscm/git/gliss2/armv5t.git
 ORCHID_GIT = https://github.com/hcasse/Orchid.git
 
-setup: config.mk git-gliss git-armv5t git-orchid setup-python
-
-setup-python:
-	cd python; make setup
+setup: $(ARMV5T_SETUP) git-orchid
 
 git-gliss:
 	@if [ -e gliss2 ]; then \
@@ -110,7 +113,7 @@ git-gliss:
 	fi
 	@cd gliss2; make
 
-git-armv5t:
+git-armv5t: git-gliss
 	@if [ -e armv5t ]; then \
 		echo "Updating ArmV5T"; \
 		cd armv5t; git pull; \
@@ -123,8 +126,13 @@ git-armv5t:
 	fi
 	@cd armv5t; make
 
+config: config.mk setup
+
 config.mk:
-	cp config.in config.mk
+	cp config.in $@
+ifdef WITH_ARMV5T
+	echo "WITH_ARMV5T=$(WITH_ARMV5T)" >> $@
+endif
 
 git-orchid:
 	@if [ -e Orchid ]; then \
