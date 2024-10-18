@@ -172,28 +172,36 @@ static uint32_t mem_hash2(csim_addr_t addr)  {
 
 
 /**
+ * Initialize the passed memory.
+ * @param mem	Memory to initialize.
+ * @ingroup memory
+ */
+static void csim_mem_init(memory_64_t *mem) {
+
+	/* initialize memory */
+	memset(mem->primary_hash_table,0,sizeof(mem->primary_hash_table));
+	mem->image_link = NULL;
+	mem->callback_infos.ptr = 0;
+	mem->callback_infos.is_changed = 0;
+
+	/* initialize spy */
+	#	ifdef ARM_MEM_SPY
+	mem->spy_fun = arm_mem_default_spy;
+	mem->spy_data = 0;
+	#	endif
+}
+
+
+/**
  * Build a new memory handler.
  * @return	Memory handler or NULL if there is not enough memory.
  * @ingroup memory
  */
 csim_memory_t *csim_mem_new(void) {
-    memory_64_t *mem;
-    
-    /* allocate the memory */
-    mem = (memory_64_t *)malloc(sizeof(memory_64_t));
-    if (mem!=NULL){
-        memset(mem->primary_hash_table,0,sizeof(mem->primary_hash_table));
-        mem->image_link = NULL;
-	mem->callback_infos.ptr = 0;
-	mem->callback_infos.is_changed = 0;
-    }
-
-	/* initialize spy */
-#	ifdef GLISS_MEM_SPY
-		mem->spy_fun = gliss_mem_default_spy;
-		mem->spy_data = 0;
-#	endif
-
+	memory_64_t *mem;
+	mem = (memory_64_t *)malloc(sizeof(memory_64_t));
+	if(mem != NULL)
+		csim_mem_init(mem);
 	return (csim_memory_t *)mem;
 }
 
@@ -220,12 +228,7 @@ void csim_mem_set_spy(csim_memory_t *mem, csim_mem_spy_t fun, void *data) {
 #endif
 
 
-/**
- * Free and delete the given memory.
- * @param memory	Memory to delete.
- * @ingroup memory
- */
-void csim_mem_delete(csim_memory_t *memory) {
+void csim_mem_clean(csim_memory_t *memory) {
 	int i,j;
 	secondary_memory_hash_table_t *secondary_hash_table;
 	memory_page_table_entry_t *pte;
@@ -262,6 +265,30 @@ void csim_mem_delete(csim_memory_t *memory) {
 
 	/* free the memory */
 	free(mem64); 	/* freeing the primary hash table */
+}
+
+
+/**
+ * Free and delete the given memory.
+ * @param memory	Memory to delete.
+ * @ingroup memory
+ */
+void csim_mem_delete(csim_memory_t *memory) {
+	csim_mem_clean(memory);
+	memory_64_t *mem64 = (memory_64_t *)memory;
+	free(mem64); 	/* freeing the primary hash table */
+}
+
+
+/**
+ * Reset the passed memory.
+ * @param memory	Memory to reset.
+ * @ingroup memory
+ */
+void arm_mem_reset(csim_memory_t *memory) {
+	csim_mem_clean(memory);
+	memory_64_t *mem64 = (memory_64_t *)memory;
+	csim_mem_init(mem64);
 }
 
 
@@ -547,7 +574,7 @@ uint16_t csim_mem_read16(csim_memory_t *memory, csim_addr_t address) {
 		/* aligned */
 		if((address & 0x00000001) == 0)
 			res = *(uint16_t *)p;	// aligned
-		
+
 		/* not aligned */
 		else {
 			union {
@@ -582,11 +609,11 @@ uint32_t csim_mem_read32(csim_memory_t *memory, csim_addr_t address) {
 	/* get page */
 	csim_addr_t offset = address % MEMORY_PAGE_SIZE;
 	memory_page_table_entry_t *pte=mem_get_page(mem, address);
-	
+
 	/* callback case */
 	if (pte->info)
 		pte->info->callback_fun(address, 4, &res, CSIM_MEM_READ, pte->info->callback_data);
-	
+
 	/* normal case */
 	else {
 		uint8_t *p = pte->storage + offset;
@@ -594,7 +621,7 @@ uint32_t csim_mem_read32(csim_memory_t *memory, csim_addr_t address) {
 		/* aligned */
 		if((address & 0x00000003) == 0)
 			res = *(uint32_t *)p;
-	
+
 		/* not aligned */
 		else {
 			union {
@@ -643,11 +670,11 @@ uint64_t gliss_mem_read64(csim_memory_t *memory, csim_addr_t address) {
 	/* normal case */
 	else {
 		uint8_t *p = pte->storage + offset;
-		
+
 		/* aligned */
 		if((address & 0x00000007) == 0)
 			res = *(uint64_t *)p;
-		
+
 		/* not aligned */
 		else {
 			memcpy(val.bytes, p, 8);
@@ -723,7 +750,7 @@ void csim_mem_write8(csim_memory_t *memory, csim_addr_t address, uint8_t val) {
 	/* get page */
 	csim_addr_t offset = address % MEMORY_PAGE_SIZE;
 	memory_page_table_entry_t *pte = mem_get_page(mem, address);
-	
+
 	/* callback case */
 	if(pte->info != NULL)
 		pte->info->callback_fun(address, 1, &val, CSIM_MEM_WRITE, pte->info->callback_data);
@@ -731,7 +758,7 @@ void csim_mem_write8(csim_memory_t *memory, csim_addr_t address, uint8_t val) {
 	/* normal case */
 	else
 		pte->storage[offset] = val;
-	
+
 	/* support spy */
 #	ifdef GLISS_MEM_SPY
     	mem->spy_fun(mem, address, sizeof(val), csim_access_write, mem->spy_data);
@@ -750,21 +777,21 @@ void gliss_mem_write16(csim_memory_t *memory, csim_addr_t address, uint16_t val)
 	memory_64_t *mem = (memory_64_t *)memory;
 
 	/* get page */
-	csim_addr_t offset = address % MEMORY_PAGE_SIZE;	
+	csim_addr_t offset = address % MEMORY_PAGE_SIZE;
 	memory_page_table_entry_t *pte = mem_get_page(mem, address);
-	
+
 	/* callback case */
 	if (pte->info != NULL)
 		pte->info->callback_fun(address, 2, &val, CSIM_MEM_WRITE, pte->info->callback_data);
-	
+
 	/* normal case */
 	else {
 		uint16_t *q = (uint16_t *)(pte->storage + offset);
-		
+
 		/* aligned */
 		if((address & 0x00000001) == 0)
 			*q = val;
-		
+
 		/* unaligned */
 		else {
 			union val_t {
@@ -792,7 +819,7 @@ void gliss_mem_write16(csim_memory_t *memory, csim_addr_t address, uint16_t val)
 void csim_mem_write32(csim_memory_t *memory, csim_addr_t address, uint32_t val) {
 	memory_64_t *mem = (memory_64_t *)memory;
 
-	/* compute address */	
+	/* compute address */
 	csim_addr_t offset = offset = address % MEMORY_PAGE_SIZE;
 	memory_page_table_entry_t *pte = mem_get_page(mem, address);
 
@@ -807,9 +834,9 @@ void csim_mem_write32(csim_memory_t *memory, csim_addr_t address, uint32_t val) 
 		/* aligned */
 		if((address & 0x00000003) == 0)
 			*q = val;
-		
+
 		/* not aligned */
-		else {			
+		else {
 			union val_t {
 				uint8_t bytes[4];
 				uint32_t word;
@@ -838,11 +865,11 @@ void csim_mem_write64(csim_memory_t *memory, csim_addr_t address, uint64_t val) 
 	/* compute address */
 	csim_addr_t offset = address % MEMORY_PAGE_SIZE;
 	memory_page_table_entry_t *pte = mem_get_page(mem, address);
-	
+
 	/* callback case */
 	if(pte->info != NULL)
 		pte->info->callback_fun(address, 8, &val, CSIM_MEM_WRITE, pte->info->callback_data);
-	
+
 	/* normal case */
 	else {
 		uint64_t *q = (uint64_t *)(pte->storage + offset);
@@ -850,7 +877,7 @@ void csim_mem_write64(csim_memory_t *memory, csim_addr_t address, uint64_t val) 
 		/* aligned */
 		if((address & 0x00000007) == 0)
 			*q = val;
-		
+
 		/* not aligned */
 		else {
 			union val_t {
@@ -939,7 +966,7 @@ static csim_callback_info_t *get_callback_info(csim_callback_info_table_t *infos
  */
 static void update_callback_infos(csim_memory_t *mem) {
 	int i, j;
-	
+
 	/* go through pages */
 	for (i = 0 ; i < PRIMARYMEMORY_HASH_TABLE_SIZE ; i++) {
 		secondary_memory_hash_table_t *secondary_hash_table = mem->primary_hash_table[i];
@@ -989,7 +1016,7 @@ void csim_set_range_callback(csim_memory_t *mem, csim_addr_t start, csim_addr_t 
 	/* insert at beginning of the current list */
 	new_info->next = mem->callback_infos.ptr;
 	mem->callback_infos.ptr = new_info;
-	
+
 	/* signal we have to update already created pages */
 	//mem->callback_infos.is_changed = 1;
 }
@@ -1018,7 +1045,7 @@ void csim_unset_range_callback(csim_memory_t *mem, csim_addr_t start, csim_addr_
 		if(a == endp)
 			break;
 		a = a + MEMORY_PAGE_SIZE;
-	}		
+	}
 }
 
 

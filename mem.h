@@ -59,6 +59,7 @@ typedef enum {
 #	define csim_mem_new	arm_mem_new
 #	define csim_mem_delete	arm_mem_delete
 #	define csim_mem_copy	arm_mem_copy
+#	define csim_mem_reset	arm_mem_reset
 
 #	define csim_mem_read8	arm_mem_read8
 #	define csim_mem_read16	arm_mem_read16
@@ -95,6 +96,7 @@ typedef enum {
 	csim_memory_t *csim_mem_new();
 	void csim_mem_delete(csim_memory_t *memory);
 	csim_memory_t *csim_mem_copy(csim_memory_t *memory);
+	void csim_mem_reset(csim_memory_t *memory);
 
 	/* read functions */
 	uint8_t csim_mem_read8(csim_memory_t *, csim_addr_t);

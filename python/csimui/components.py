@@ -1,6 +1,7 @@
 """Components of csimui"""
 
 import csim
+from csimui.util import BoardError
 import yaml
 from csimui import util
 
@@ -26,8 +27,11 @@ class Core(Component):
 		assert self.core is not None
 
 	def load(self, path):
-		"""Load the binary from the path."""
-		csim.core_load(self.core, path)
+		"""Load the binary from the path.
+		Raises BoardError if there is an error."""
+		res = csim.core_load(self.core, path)
+		if res != 0:
+			raise BoardError(f'cannot load "{path}"')
 
 	def pc(self):
 		"""Get the current PC."""
@@ -81,9 +85,12 @@ class Board:
 		self.io_components = []
 
 		# load the board
-		with open(board_path, "r") as input:
-			desc = yaml.safe_load(input)
-		board_name = desc["name"]
+		try:
+			with open(board_path, "r") as input:
+				desc = yaml.safe_load(input)
+		except OSError as exn:
+			raise BoardError(str(exn))
+		board_name = util.get(desc, "name", "no name")
 
 		# build the board
 		self.board = csim.new_board(board_name, None)
@@ -132,7 +139,8 @@ class Board:
 			self.load_bin(bin_path)
 
 	def load_bin(self, path):
-		"""Load the binary."""
+		"""Load the binary. Raise BoardError in case of error."""
+		self.bin_path = path
 		self.core.load(path)
 
 	def parse_port(self, text):
@@ -151,8 +159,13 @@ class Board:
 			raise util.BoardError("cannot find port '%s' in '%s'" % (both[1], both[0]))
 		return (found_inst.inst, port)
 
-
 	def update(self):
 		"""Called each the IO components needs to be updated."""
 		for comp in self.io_components:
 			comp.update()
+
+	def reset(self):
+		"""Reset the state of the simulator."""
+		csim.reset_board(self.board)
+		if self.bin_path is not None:
+			self.load_bin(self.bin_path)

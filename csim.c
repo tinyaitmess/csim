@@ -330,6 +330,9 @@ void csim_delete_board(csim_board_t *board) {
  */
 void csim_reset_board(csim_board_t *board) {
 
+	/* reset memory */
+	csim_mem_reset(board->mem);
+
 	/* reset all component instances */
 	for(csim_inst_t *i = board->insts; i != NULL; i = i->next)
 		i->comp->reset(i);

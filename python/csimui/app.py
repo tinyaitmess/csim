@@ -19,6 +19,7 @@ class MyPage(Page):
 			self,
 			VGroup([
 				HGroup([
+					Button("reset", on_click=self.reset),
 					self.run_but,
 					self.stop_but,
 					self.step_but,
@@ -59,6 +60,10 @@ class MyPage(Page):
 		self.board.run(self.board.quantum)
 		self.show_current()
 		self.board.update()
+
+	def reset(self):
+		self.board.reset()
+		self.show_current()
 
 
 class MyApp(Application):
