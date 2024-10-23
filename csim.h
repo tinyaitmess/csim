@@ -185,7 +185,8 @@ struct csim_core_t {
 	csim_addr_t (*pc)(csim_core_inst_t *inst);
 	void (*disasm)(csim_core_inst_t *inst, csim_addr_t addr, char buf[]);
 	void *(*memory)(csim_core_inst_t *inst);
-	void (*interrupt)(csim_core_inst_t *_inst,int codeInterrupt);
+	void (*interrupt)(csim_core_inst_t *_inst, int codeInterrupt);
+	unsigned (*inst_size)(csim_core_inst_t *inst);
 };
 
 struct csim_core_inst_t {
@@ -268,10 +269,16 @@ void csim_run(csim_board_t *board, csim_time_t time);
 
 void csim_no_state(csim_iocomp_inst_t *inst, uint32_t *state);
 
+uint8_t csim_byte_at(csim_board_t *board, csim_addr_t addr);
+uint16_t csim_half_at(csim_board_t *board, csim_addr_t addr);
+uint32_t csim_word_at(csim_board_t *board, csim_addr_t addr);
+uint64_t csim_long_at(csim_board_t *board, csim_addr_t addr);
 
 /* core functions */
 #define csim_core_pc(i) \
 	((csim_core_t *)(i)->inst.comp)->pc(i)
+#define csim_core_inst_size(i) \
+	((csim_core_t *)(i)->inst.comp)->inst_size(i)
 #define csim_core_disasm(i, a, b) \
 	((csim_core_t *)(i)->inst.comp)->disasm(i, a, b)
 #define csim_core_load(i, p) \

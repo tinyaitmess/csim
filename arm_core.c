@@ -116,6 +116,15 @@ void interrupt(csim_core_inst_t *_inst,int codeInterrupt) {
 	fprintf(stderr,"Interruption numéro : %d\nNouveau pc = %d\n",codeInterrupt,pc(_inst));
 }
 
+static unsigned inst_size(csim_core_inst_t *_inst) {
+	arm_core_inst_t *inst = (arm_core_inst_t *)_inst;
+	arm_inst_t *i = arm_next_inst(inst->sim);
+	unsigned res = arm_get_inst_size(i);
+	arm_free_inst(i);
+	return res;
+}
+
+
 static void arm_make_R(csim_inst_t *inst, int num, char *buf, int size) {
 	snprintf(buf, size, "R%d", num);
 }
@@ -164,5 +173,6 @@ csim_core_t arm_component = {
 	pc,
 	disasm,
 	memory,
-	interrupt
+	interrupt,
+	inst_size
 };

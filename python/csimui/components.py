@@ -9,6 +9,70 @@ CSIM_SIMPLE = 1
 CSIM_CORE = 2
 CSIM_IO = 3
 
+
+class Register:
+	"""Representation of a register."""
+
+	def __init__(self, comp, reg):
+		self.comp = comp
+		self.reg = reg
+		self.name = None
+		self.offset = None
+		self.size = None
+		self.count = None
+		self.stride = None
+		self.flags = None
+		self.type = None
+
+	def fill(self):
+		(name, offset, size, count, stride, flags, type) = register_info(self.reg)
+		self.name = name
+		self.offset = offset
+		self.size = size
+		self.count = count
+		self.stride = stride
+		self.flags = flags
+		self.type = type
+
+	def get_name(self):
+		if self.name is None:
+			self.fill()
+		return self.name
+
+	def get_offset(self):
+		if self.offset is None:
+			self.fill()
+		return self.offset
+
+	def get_count(self):
+		if self.count is None:
+			self.fill()
+		return self.count
+
+	def get_stride(self):
+		if self.stride is None:
+			self.fill()
+		return self.stride
+
+	def get_flags(self):
+		if self.flags is None:
+			self.fill()
+		return self.flags
+
+	def get_type(self):
+		if self.type is None:
+			self.fill()
+		return self.type
+
+	def get_value(self, i):
+		"""Get the value of the register."""
+		return csim.get_register_val(self.comp.inst, self.reg, i)
+
+	def set_value(self, i, x):
+		"""Set the value of the register."""
+		return csim.set_register_val(self.comp.inst, self.reg, i, x)
+
+
 class Component:
 	"""Represents a simple component."""
 
@@ -17,6 +81,21 @@ class Component:
 		self.name = name
 		self.comp = comp
 		self.inst = inst
+		self.registers = None
+
+	def get_name(self):
+		"""Get the name of the component."""
+		return self.name
+
+	def get_registers(self):
+		"""Get registers of the component. List of Register objects."""
+		if self.registers:
+			(name, type, reg_cnt, port_cnt, size) = csim.component_info(self.comp)
+			self.registers = [ ]
+			for i in range(reg_cnt):
+				self.registers.append(Register(self, reg))
+		return self.registers
+
 
 class Core(Component):
 	"""Represents a core component."""
@@ -36,6 +115,10 @@ class Core(Component):
 	def pc(self):
 		"""Get the current PC."""
 		return csim.core_pc(self.core)
+
+	def inst_size(self):
+		"""Get the size of the current instruction."""
+		return csim.core_inst_size(self.core)
 
 	def disasm(self, addr):
 		"""Disassemble the given address."""
@@ -169,3 +252,17 @@ class Board:
 		csim.reset_board(self.board)
 		if self.bin_path is not None:
 			self.load_bin(self.bin_path)
+
+	def release(self):
+		"""Release resources used by the board."""
+		csim.delete_board(self.board)
+		self.board = None
+
+	def get_pc(self):
+		"""Get the current address of the PC."""
+		return self.core.pc()
+
+	def inst_size(self):
+		"""Get tha size of the current instruction. """
+		return self.core.inst_size()
+

@@ -106,6 +106,14 @@ core_pc(PyObject *self, PyObject *args) {
 }
 
 static PyObject *
+core_inst_size(PyObject *self, PyObject *args) {
+	PyObject *oinst;
+	if(!PyArg_ParseTuple(args, "O", &oinst))
+		return NULL;
+	RETURN_LONG(csim_core_inst_size(TPTR(csim_core_inst_t, oinst)));
+}
+
+static PyObject *
 core_disasm(PyObject *self, PyObject *args) {
 	PyObject *oinst;
 	uint64_t addr;
@@ -299,6 +307,55 @@ core_inst(PyObject *self, PyObject *args) {
 	RETURN_TPTR(csim_inst_t, &inst->inst);
 }
 
+static PyObject *
+byte_at(PyObject *self, PyObject *args) {
+	PyObject *oboard;
+	csim_addr_t addr;
+	if(!PyArg_ParseTuple(args, "OI", &oboard, &addr))
+		return NULL;
+	csim_board_t *board = TPTR(csim_board_t, oboard);
+	RETURN_UINT(csim_byte_at(board, addr));
+}
+
+static PyObject *
+half_at(PyObject *self, PyObject *args) {
+	PyObject *oboard;
+	csim_addr_t addr;
+	if(!PyArg_ParseTuple(args, "OI", &oboard, &addr))
+		return NULL;
+	csim_board_t *board = TPTR(csim_board_t, oboard);
+	RETURN_UINT(csim_half_at(board, addr));
+}
+
+static PyObject *
+word_at(PyObject *self, PyObject *args) {
+	PyObject *oboard;
+	csim_addr_t addr;
+	if(!PyArg_ParseTuple(args, "OI", &oboard, &addr))
+		return NULL;
+	csim_board_t *board = TPTR(csim_board_t, oboard);
+	RETURN_UINT(csim_word_at(board, addr));
+}
+
+static PyObject *
+long_at(PyObject *self, PyObject *args) {
+	PyObject *oboard;
+	csim_addr_t addr;
+	if(!PyArg_ParseTuple(args, "OI", &oboard, &addr))
+		return NULL;
+	csim_board_t *board = TPTR(csim_board_t, oboard);
+	RETURN_ULONG(csim_long_at(board, addr));
+}
+
+static PyObject *
+get_date(PyObject *self, PyObject *args) {
+	PyObject *oboard;
+	if(!PyArg_ParseTuple(args, "O", &oboard))
+		return NULL;
+	csim_board_t *board = TPTR(csim_board_t, oboard);
+	RETURN_ULONG(board->date);
+}
+
 static PyMethodDef csim_methods[] = {
 	FUN(new_board, "(name, memory) Create a new board."
 		"memory may be None. Return the board."),
@@ -324,7 +381,13 @@ static PyMethodDef csim_methods[] = {
 	FUN(get_register_val, "(instance, register, index) Get the value of a register."),
 	FUN(set_register_val, "(instance, register, index, value) Set the value of a register."),
 	FUN(core_inst, "(core instance) Get the component instance of the passed core instance."),
+	FUN(core_inst_size, "(core instance) Get the size of the current instruction in the core."),
 	FUN(version, "Get version."),
+	FUN(byte_at, "(board, address) Get the byte in the board at the passed address."),
+	FUN(half_at, "(board, address) Get the half-word in the board at the passed address."),
+	FUN(word_at, "(board, address) Get the word in the board at the passed address."),
+	FUN(long_at, "(board, address) Get the long word in the board at the passed address."),
+	FUN(get_date, "(board) Get the date of the board."),
 	{NULL, NULL, 0, NULL}
 };
 

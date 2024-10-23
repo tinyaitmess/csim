@@ -337,6 +337,10 @@ void csim_reset_board(csim_board_t *board) {
 	for(csim_inst_t *i = board->insts; i != NULL; i = i->next)
 		i->comp->reset(i);
 
+	/* reset time */
+	board->date = 0;
+	board->evts = NULL;
+
 	/* re-install callbacks */
 	for(int i = 0; i < CSIM_IO_SIZE; i++)
 		for(csim_io_t *p = board->ios[i]; p != NULL; p = p->next)
@@ -731,3 +735,42 @@ csim_component_t *csim_find_component(const char *name) {
 	return NULL;
 }
 
+/**
+ * Read a byte in memory.
+ * @param board		Current board.
+ * @param addr		Address to read byte from.
+ * @return			Read byte.
+ */
+uint8_t csim_byte_at(csim_board_t *board, csim_addr_t addr) {
+	return csim_mem_read8(board->mem, addr);
+}
+
+/**
+ * Read an half-word in memory.
+ * @param board		Current board.
+ * @param addr		Address to read half-word from.
+ * @return			Read half-word.
+ */
+uint16_t csim_half_at(csim_board_t *board, csim_addr_t addr) {
+	return csim_mem_read16(board->mem, addr);
+}
+
+/**
+ * Read a word in memory.
+ * @param board		Current board.
+ * @param addr		Address to read word from.
+ * @return			Read word.
+ */
+uint32_t csim_word_at(csim_board_t *board, csim_addr_t addr) {
+	return csim_mem_read32(board->mem, addr);
+}
+
+/**
+ * Read a long word in memory.
+ * @param board		Current board.
+ * @param addr		Address to read long word from.
+ * @return			Read long word.
+ */
+uint64_t csim_long_at(csim_board_t *board, csim_addr_t addr) {
+	return csim_mem_read64(board->mem, addr);
+}
