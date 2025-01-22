@@ -144,10 +144,7 @@ ifdef WITH_ORCHID
 ORCHID_PATH=Orchid
 endif
 
-config: config-force config.mk
-
-config-force:
-	rm config.mk
+config: config.mk
 
 config.mk:
 	cp config.in config.mk
