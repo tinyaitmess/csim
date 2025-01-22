@@ -20,24 +20,8 @@ CLEAN += stm32-clean
 DISTCLEAN += stm32-distclean
 endif
 
-# Orchid options
-ifdef WITH_ORCHID
-ifdef (WITH_ORCHID,)
-ORCHID_PATH=Orchid
-ORCHID_SETUP=git-orchid
-else
-ORCHID_PATH=$(WITH_ORCHID)
-endif
-endif
-
 # ARMV5T option
-ifdef WITH_ARMV5T
-ifeq (WITH_ARMV5T,)
-ARMV5T_PATH=armv5t
-ARMV5T_SETUP=armv5t-setup
-else
-ARMV5T_PATH=$(WITH_ARMV5T)
-endif
+ifdef ARMV5T_PATH
 CFLAGS += -DNO_MEM -I$(ARMV5T_PATH)/include
 LDFLAGS += -L$(ARMV5T_PATH)/src -larm
 else
@@ -112,52 +96,61 @@ GLISS_GIT = https://git.renater.fr/anonscm/git/gliss2/gliss2.git
 ARMV5T_GIT = https://git.renater.fr/anonscm/git/gliss2/armv5t.git
 ORCHID_GIT = https://github.com/hcasse/Orchid.git
 
-setup: $(ARMV5T_SETUP) $(ORCHID_SETUP)
+setup: git-armv5t git-orchid
 
 git-gliss:
+ifeq ($(ARMV5T_PATH),armv5t)
 	@if [ -e gliss2 ]; then \
-		echo "Updating gliss"; \
-		cd gliss2; git pull; \
+		echo "GLISS2 already setup!"; \
 	else \
 		echo "Downloading gliss"; \
 		git clone $(GLISS_GIT); \
 	fi
 	@cd gliss2; make
+endif
 
 git-armv5t: git-gliss
+ifeq ($(ARMV5T_PATH),armv5t)
 	@if [ -e armv5t ]; then \
-		echo "Updating ArmV5T"; \
-		cd armv5t; git pull; \
+		echo "ArmV5T already setup!"; \
 	else \
 		echo "Downloading ArmV5T"; \
-		git clone $(ARMV5T_GIT); \
+		git clone -b csim $(ARMV5T_GIT); \
 		cd armv5t; \
 		make config.mk; \
 		echo "WITH_IO = 1" >> config.mk; \
 	fi
 	@cd armv5t; make
+endif
 
 git-orchid:
+ifeq ($(ORCHID_PATH),Orchid)
 	@if [ -e Orchid ]; then \
-		echo "Updating Orchid"; \
-		cd Orchid; git pull; \
+		echo "Orchid already setup!"; \
 	else \
 		echo "Downloading Orchid"; \
 		git clone $(ORCHID_GIT); \
 	fi
+endif
 
-config: config-force setup
 
+# Configuration generation
 
-config.mk: config-force
-
-config-force:
-	cp config.in config.mk
 ifdef WITH_ARMV5T
-	echo "WITH_ARMV5T=$(WITH_ARMV5T)" >> config.mk
+ARMV5T_PATH=armv5t
+endif
+
+ifdef WITH_ORCHID
+ORCHID_PATH=Orchid
+endif
+
+config.mk:
+	cp config.in config.mk
+ifdef ARMV5T_PATH
+	echo "ARMV5T_PATH=$(ARMV5T_PATH)" >> config.mk
 endif
 ifdef WITH_ORCHID
-	echo "WITH_ORCHID=$(WITH_ORCHID)" >> config.mk
+	echo "ORCHID_PATH=$(ORCHID_PATH)" >> config.mk
 endif
 
 
