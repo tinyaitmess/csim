@@ -104,7 +104,7 @@ ifeq ($(ARMV5T_PATH),armv5t)
 		echo "GLISS2 already setup!"; \
 	else \
 		echo "Downloading gliss"; \
-		git clone $(GLISS_GIT); \
+		git clone -b csim $(GLISS_GIT); \
 	fi
 	@cd gliss2; make
 endif
@@ -115,7 +115,7 @@ ifeq ($(ARMV5T_PATH),armv5t)
 		echo "ArmV5T already setup!"; \
 	else \
 		echo "Downloading ArmV5T"; \
-		git clone -b csim $(ARMV5T_GIT); \
+		git clone $(ARMV5T_GIT); \
 		cd armv5t; \
 		make config.mk; \
 		echo "WITH_IO = 1" >> config.mk; \
@@ -143,6 +143,11 @@ endif
 ifdef WITH_ORCHID
 ORCHID_PATH=Orchid
 endif
+
+config: config-force config.mk
+
+config-force:
+	rm config.mk
 
 config.mk:
 	cp config.in config.mk
