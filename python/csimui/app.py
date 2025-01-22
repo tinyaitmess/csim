@@ -74,6 +74,3 @@ class MyApp(Application):
 
 	def first(self):
 		return self.fst
-
-	def run(self):
-		run(self)

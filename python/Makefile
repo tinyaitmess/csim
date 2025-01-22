@@ -3,7 +3,7 @@ include ../config.mk
 
 PYTHON = $(shell which python3)
 
-export PYTHONPATH=$(WITH_ORCHID)
+export PYTHONPATH=../$(ORCHID_PATH)
 
 NUM = 1
 

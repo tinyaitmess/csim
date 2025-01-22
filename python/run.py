@@ -15,6 +15,6 @@ bin_path = sys.argv[2]
 # main program
 try:
 	board = Board(board_path, bin_path)
-	MyApp(board).run()
+	MyApp(board).run(debug=False)
 except BoardError as e:
 	print("ERROR:", str(e))
