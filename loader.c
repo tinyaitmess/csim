@@ -241,6 +241,17 @@ static void on_end(void *data) {
 	}
 }
 
+
+/**
+ * Called when an error in YAML parsing is found.
+ * @param msg	Message.
+ * @param data	Application data.
+ */
+static void csim_loader_on_error(const char *msg, void *data) {
+	fprintf(stderr, "%s\n", msg);
+}
+
+
 /**
  * Load the content of a board from given file.
  *
@@ -257,6 +268,7 @@ csim_board_t *csim_load_board(const char *path, csim_memory_t *mem) {
 	};
 	yaml_handler_t handler;
 	yaml_init_handler(&handler);
+	handler.on_error = csim_loader_on_error;
 	handler.on_key = on_key;
 	handler.on_item = on_item;
 	handler.on_end = on_end;
@@ -264,7 +276,8 @@ csim_board_t *csim_load_board(const char *path, csim_memory_t *mem) {
 	if(num == 0)
 		return loader.board;
 	else {
-		csim_delete_board(loader.board);
+		if(loader.board != NULL)
+			csim_delete_board(loader.board);
 		return NULL;
 	}
 }

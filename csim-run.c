@@ -234,6 +234,10 @@ int main(int argc, const char *argv[]) {
 		if(VERBOSE)
 			fprintf(stderr, "loading board from %s\n", board_path);
 		board = csim_load_board(board_path, NULL);
+		if(board == NULL) {
+			fprintf(stderr, "ERROR: cannot load the board!\n");
+			exit(3);
+		}
 		if(board->cores == NULL) {
 			fprintf(stderr, "ERROR: no core in this board!\n");
 			exit(2);
