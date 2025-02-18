@@ -13,3 +13,4 @@ let date = "18/01/2025"
 //type byte = card(8)
 
 // Inclure les fichiers portb.nmp, portc.nmp, portd.nmp
+include "portd.nmp"
