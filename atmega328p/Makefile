@@ -4,15 +4,15 @@ CFLAGS = -I.. -g
 NMPS = \
 	GPIO.nmp
 
-all: libstm32.a
+all: libatmega328p.a
 
 clean:
-	-rm $(NMPS:.nmp=.o) libstm32.a
+	-rm $(NMPS:.nmp=.o) libatmega328p.a
 
 distclean: clean
 	-rm $(NMPS:.nmp=.h) $(NMPS:.nmp=.c)
 	
-libstm32.a: $(NMPS:.nmp=.o)
+libatmega328p.a: $(NMPS:.nmp=.o)
 	ar rcs $@ $^
 
 %.c: %.nmp

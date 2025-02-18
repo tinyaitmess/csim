@@ -20,6 +20,12 @@ CLEAN += stm32-clean
 DISTCLEAN += stm32-distclean
 endif
 
+ifdef WITH_ATMEGA328P
+ALL += atmega328p-all
+CLEAN += atmega328p-clean
+DISTCLEAN += atmega328p-distclean
+endif
+
 # ARMV5T option
 ifdef ARMV5T_PATH
 CFLAGS += -DNO_MEM -I$(ARMV5T_PATH)/include
@@ -83,6 +89,16 @@ stm32-all:
 stm32-clean:
 	cd stm32; make clean
 
+
+# ATMEGA328P rules
+atmega328p-all:
+	cd atmega328p; make all
+
+atmega328p-clean:
+	cd atmega328p; make clean
+
+atmega328p-distclean:
+	cd atmega328p; make distclean
 
 # python rules
 python:
