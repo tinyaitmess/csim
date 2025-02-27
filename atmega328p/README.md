@@ -6,7 +6,7 @@ Pour générer les fichiers sources du composant GPIO, utilisez la commande suiv
 make
 ```
 
-*Ceci génère les fichiers `portd.c` et `portd.h`.*
+*Ceci génère les fichiers `portd.c` et `portd.h`, et le fichier test_portd.elf dans le dossier samples*
 
 ---
 
@@ -29,13 +29,18 @@ Basculer sur dossier courant
 ./csim-run atmega328p/samples/test_portd.elf -b atmega328p/samples/test_portd.yaml
 ```
 
-## Réinitialisation du dossier `samples`
+## Réinitialisation du dossier `atmega328p`
 
-Pour nettoyer les fichiers générés et rétablir l'état initial du dossier `samples`, utilisez :
+Pour nettoyer les fichiers générés et rétablir l'état initial du dossier, utilisez :
 
 ```sh
-cd samples
 make clean
+```
+
+Ou si vous souhaitez nettoyer le dossier `samples`, il est possible de le faire à distance avec la commande :
+
+```sh
+make distclean
 ```
 
 > **Remarque :** Actuellement, les fichiers de test ne fonctionnent pas avec la carte **ATmega328P**.
