@@ -6,7 +6,7 @@ Pour générer les fichiers sources du composant GPIO, utilisez la commande suiv
 make
 ```
 
-*Ceci génère les fichiers `portd.c` et `portd.h`, et le fichier test_portd.elf dans le dossier samples*
+*Ceci génère les fichiers `portd.c` et `portd.h`, et le fichier `test_portd.elf` dans le dossier samples*
 
 ---
 
