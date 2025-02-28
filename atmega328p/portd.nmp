@@ -18,11 +18,10 @@ reg PORTD [1, byte]
     label = "Port D Data Register"
     offset = 0x2B  // Adresse du registre PORTD 
 
-reg PIND [1, byte]
-    offset = 0x29    
 
 port PIN(8, bit)
-    label = "Port D Pins"
+    // PIND7 PIND6 PIND5 PIND4 PIND3 PIND2 PIND1 PIND0
+    label = "Port D Input Pins Address"
     offset = 0x29
     init = 0
     on_update = {
