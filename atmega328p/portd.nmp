@@ -22,7 +22,6 @@ reg PORTD [1, byte]
 port PIN(8, bit)
     // PIND7 PIND6 PIND5 PIND4 PIND3 PIND2 PIND1 PIND0
     label = "Port D Input Pins Address"
-    offset = 0x29
     init = 0
     on_update = {
         for i in 0 .. 7 do
