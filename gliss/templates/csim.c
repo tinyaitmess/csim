@@ -45,11 +45,6 @@ typedef struct  $(comp)_inst_t {
 	$(else)
 	csim_inst_t inst;
 	$(end)
-	$(if io_comp)
-    csim_iocomp_t inst;
-	$(else)
-	csim_inst_t inst;
-	$(end)
     $(foreach registers)
 		$(if multiple)
 			$(type) $(name)[$(size)];
@@ -222,7 +217,7 @@ static csim_reg_t regs[] = {
 
 /* predeclaration of port-functions */
 $(foreach ports)
-static void on_input_$(name)(csim_inst_t *inst, csim_value_type_t type, csim_value_t val);
+static void on_input_$(name)(csim_port_inst_t *port, csim_value_type_t type, csim_value_t val);
 $(end)
 
 
