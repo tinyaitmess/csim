@@ -35,6 +35,7 @@
 #include "leds10.h"
 #include "timer.h"
 #include "arm_core.h"
+#include "portd.h"
 
 
 /**
@@ -48,6 +49,7 @@ csim_component_t *comps[] = {
 	&seven_seg_display_component.comp,
 	&leds10_component,
 	&arm_component.comp,
+	&portd_component,
 	NULL
 };
 

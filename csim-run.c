@@ -38,6 +38,8 @@
 
 #include "arm_core.h"
 
+#include "portd.h"
+
 /*#include "yaml.h"
 
 #include "led.h"
