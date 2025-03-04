@@ -1,12 +1,12 @@
 ## Génération des fichiers à partir de GPIO
 
-Pour générer les fichiers sources du composant GPIO, utilisez la commande suivante :
+Pour générer les fichiers des composants, utilisez la commande suivante :
 
 ```sh
 make
 ```
 
-*Ceci génère les fichiers `portd.c` et `portd.h`, et le fichier `test_portd.elf` dans le dossier samples*
+*Ceci génère les fichiers aux formats `.c` et `.h` des divers composants déclarés dans la variable `NMPS` du `Makefile` et les fichiers `.elf` dans le dossier `samples`. Les fichiers `.c` et `.h` sont automatiquement déplacés dans le répertoire principal de csim.*
 
 ---
 
@@ -24,6 +24,14 @@ make
 ---
 
 ## Tester avec l'environnement csim
+
+> **Remarque :**  
+> Il faut ajouter les déclarations des fichiers générés du composant (ex: `portd`):  
+> Makefile principal *(ligne 7)* : `portd.c`  
+> Makefile principal *(ligne 63)* : `portd.h`  
+> csim-run.c *(ligne 41)* : `portd.h`  
+> loader.c   *(ligne 38)* : `portd.h`  
+
 Basculer sur dossier courant
 ```sh
 ./csim-run atmega328p/samples/test_portd.elf -b atmega328p/samples/test_portd.yaml
@@ -36,11 +44,3 @@ Pour nettoyer les fichiers générés et rétablir l'état initial du dossier, u
 ```sh
 make clean
 ```
-
-Ou si vous souhaitez nettoyer le dossier `samples`, il est possible de le faire à distance avec la commande :
-
-```sh
-make distclean
-```
-
-> **Remarque :** Actuellement, les fichiers de test ne fonctionnent pas avec la carte **ATmega328P**.
