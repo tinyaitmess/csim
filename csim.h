@@ -274,6 +274,9 @@ uint16_t csim_half_at(csim_board_t *board, csim_addr_t addr);
 uint32_t csim_word_at(csim_board_t *board, csim_addr_t addr);
 uint64_t csim_long_at(csim_board_t *board, csim_addr_t addr);
 
+csim_word_t csim_read_io(csim_board_t *board, csim_addr_t addr, int size);
+void csim_write_io(csim_board_t *board, csim_addr_t addr, int size, csim_word_t word);
+
 /* core functions */
 #define csim_core_pc(i) \
 	((csim_core_t *)(i)->inst.comp)->pc(i)

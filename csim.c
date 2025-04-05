@@ -154,6 +154,49 @@ const char *csim_unit_name(csim_port_type_t t) {
 
 
 /**
+ * Perform a read access to an IO register. Log an error and returns -1 if
+ * there no corresponding IO register.
+ * @param board		Current board.
+ * @param addr		Accessed address.
+ * @param size		Size of access (in bytes).
+ * @return			Read word.
+ */
+csim_word_t csim_read_io(csim_board_t *board, csim_addr_t addr, int size) {
+	int h = CSIM_IO_HASH(addr);
+	for(csim_io_t *p = board->ios[h]; p != NULL; p = p->next)
+		if(p->addr == addr) {
+			int i = (addr - p->inst->base - p->reg->offset) / p->reg->stride;
+			if(size != p->reg->size)
+				board->log(board, CSIM_ERROR, "bad IO access at %08x: size=%d and should be %d", addr, size, p->reg->size);
+			return p->reg->read(p->inst, i);
+		}
+	board->log(board, CSIM_ERROR, "bad IO access, unknown address at %08x", addr, size);
+	return -1;
+}
+
+
+/**
+ * Perform a write access to an IO register. Log an error if there is no
+ * corresponding IO register.
+ * @param board		Current board.
+ * @param addr		Accessed address.
+ * @param size		Size of access (in bytes).
+ */
+void csim_write_io(csim_board_t *board, csim_addr_t addr, int size, csim_word_t word) {
+	int h = CSIM_IO_HASH(addr);
+	for(csim_io_t *p = board->ios[h]; p != NULL; p = p->next)
+		if(p->addr == addr) {
+			int i = (addr - p->inst->base - p->reg->offset) / p->reg->stride;
+			if(size != p->reg->size)
+				board->log(board, CSIM_ERROR, "bad IO access at %08x: size=%d and should be %d", addr, size, p->reg->size);
+			p->reg->write(p->inst, i, word);
+			return;
+		}
+	board->log(board, CSIM_ERROR, "bad IO access, unknown address at %08x", addr, size);
+}
+
+
+/**
  * Called to manage an IO.
  * @param addr		Accessed address.
  * @param size		Accessed size.
