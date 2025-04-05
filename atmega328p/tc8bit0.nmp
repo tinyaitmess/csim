@@ -5,10 +5,12 @@ let io_comp = 1
 let copyright = "University of Toulouse 3"
 let date = "19/01/2025"
 
-//type bit = card(1)
+type bit = card(1)
 type byte = card(8)
 
-reg TCNT0 [1, byte] 
+
+
+reg TCNT0 [1, byte]
     label = "Timer/Counter Register"
     offset = 0x46
     init = { 0x00 }
@@ -21,11 +23,23 @@ reg TCNT0 [1, byte]
     }
 
 
+event clk
+	on_update = {}
+	on_trigger = {
+		if (TCNT0<0..0> == 255) {
+			TCNT0<0..0> = 0;
+        } else {
+            TCNT0<0..0> = TCNT0<0..0> + 1;
+        }
+        schedule clk in 5;}
+
+
 reg TCCR0A [1, byte] 
     // COM0A1 COM0A0 COM0B1 COM0B0 - - WGM01 WGM00 
     label = "Timer/Counter Control Register A"
     offset = 0x44
     init = { 0x00 }
+    on_write = { schedule clk in 5; }
 
 
 reg TCCR0B [1, byte] 
@@ -33,6 +47,7 @@ reg TCCR0B [1, byte]
     label = "Timer/Counter Control Register B"
     offset = 0x45
     init = { 0x00 }
+    on_write = { schedule clk in 5; }
 
 
 reg OCR0A [1, byte] 
