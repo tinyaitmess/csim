@@ -1,0 +1,75 @@
+let component = "tc8bit0"
+let arch = "ATmega328P"
+let license = "GPL"
+let io_comp = 1
+let copyright = "University of Toulouse 3"
+let date = "19/01/2025"
+
+//type bit = card(1)
+type byte = card(8)
+
+reg TCNT0 [1, byte] 
+    label = "Timer/Counter Register"
+    offset = 0x46
+    init = { 0x00 }
+    on_write = {
+        // Code pour modifier la valeur du compteur 
+    }
+
+    on_read = {
+        // Code pour lire la valeur du compteur 
+    }
+
+
+reg TCCR0A [1, byte] 
+    // COM0A1 COM0A0 COM0B1 COM0B0 - - WGM01 WGM00 
+    label = "Timer/Counter Control Register A"
+    offset = 0x44
+    init = { 0x00 }
+
+
+reg TCCR0B [1, byte] 
+    // FOC0A FOC0B - - WGM02 CS02 CS01 CS00 
+    label = "Timer/Counter Control Register B"
+    offset = 0x45
+    init = { 0x00 }
+
+
+reg OCR0A [1, byte] 
+    label = "Output Compare Register A"
+    offset = 0x47
+    init = { 0x00 }
+
+reg OCR0B [1, byte] 
+    label = "Output Compare Register B"
+    offset = 0x48
+    init = { 0x00 }
+
+reg TIFR0 [1, byte]
+    // - - - - - OCF0B OCF0A TOV0 
+    label = "Timer/Counter Interrupt Flag Register"
+    offset = 0x35
+    read_only = 1
+
+reg TIMSK0 [1, bye]
+    // - - - - - OCIE0B OCIE0A TOIE0
+    label = "Timer/Counter Interrupt Mask Register"
+    offset = 0x6E
+    init = { 0x00 }
+
+
+
+port OC0A (1, DIGITAL)
+    label = "Output Compare Pin A"
+    on_update = { // Code pour gérer la mise à jour de la broche de comparaison de sortie A
+    }
+
+port OC0B (1, DIGITAL)
+    label = "Output Compare Pin B"
+    on_update = { // Code pour gérer la mise à jour de la broche de comparaison de sortie B
+    }
+
+event overflow_event
+    on_trigger = { // Code pour gérer le dépassement du timer
+    }
+
