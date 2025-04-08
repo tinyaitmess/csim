@@ -3,47 +3,42 @@ let arch = "ATmega328P"
 let license = "GPL"
 let io_comp = 1
 let copyright = "University of Toulouse 3"
-let date = "19/01/2025"
+let date = "06/04/2025"
 
-//type bit = card(1)
+type bit = card(1)
 type byte = card(8)
+
+let ramp = 1  // 0 : front montant | 1 : front descendant
 
 reg TCNT0 [1, byte] 
     label = "Timer/Counter Register"
     offset = 0x46
-    init = { 0x00 }
-    on_write = {
-        // Code pour modifier la valeur du compteur 
-    }
-
-    on_read = {
-        // Code pour lire la valeur du compteur 
-    }
+    init = 0x00
 
 
 reg TCCR0A [1, byte] 
     // COM0A1 COM0A0 COM0B1 COM0B0 - - WGM01 WGM00 
     label = "Timer/Counter Control Register A"
     offset = 0x44
-    init = { 0x00 }
+    init = 0x00
 
 
 reg TCCR0B [1, byte] 
     // FOC0A FOC0B - - WGM02 CS02 CS01 CS00 
     label = "Timer/Counter Control Register B"
     offset = 0x45
-    init = { 0x00 }
+    init = 0x00
 
 
 reg OCR0A [1, byte] 
     label = "Output Compare Register A"
     offset = 0x47
-    init = { 0x00 }
+    init = 0x00
 
 reg OCR0B [1, byte] 
     label = "Output Compare Register B"
     offset = 0x48
-    init = { 0x00 }
+    init = 0x00
 
 reg TIFR0 [1, byte]
     // - - - - - OCF0B OCF0A TOV0 
@@ -51,25 +46,149 @@ reg TIFR0 [1, byte]
     offset = 0x35
     read_only = 1
 
-reg TIMSK0 [1, bye]
+reg TIMSK0 [1, byte]
     // - - - - - OCIE0B OCIE0A TOIE0
     label = "Timer/Counter Interrupt Mask Register"
     offset = 0x6E
-    init = { 0x00 }
+    init = 0x00
 
 
 
-port OC0A (1, DIGITAL)
+port OC0A (1, bit)
     label = "Output Compare Pin A"
-    on_update = { // Code pour gérer la mise à jour de la broche de comparaison de sortie A
-    }
 
-port OC0B (1, DIGITAL)
+port OC0B (1, bit)
     label = "Output Compare Pin B"
-    on_update = { // Code pour gérer la mise à jour de la broche de comparaison de sortie B
-    }
 
 event overflow_event
-    on_trigger = { // Code pour gérer le dépassement du timer
+    on_trigger = {
+        TIFR0<0 .. 0> = 1;
+        // Ajoute ici la gestion des interruptions si besoin
     }
 
+event tick
+    on_trigger = {
+        // Traitement du registre A
+        if TCCR0A<1 .. 0> == 00 then                            // --- Mode normal 
+            if TCNT0 == 0xFF then                                   // 255
+                TIFR0<0 .. 0> = 1;
+            else
+                TCNT0 = TCNT0 + 0x01;                               // Incrémente de 1
+            endif;
+        endif;
+
+        if TCCR0A<1 .. 0> == 01 then                            // --- Mode PWM (Phase Correct)
+            if ramp == 0 then                                      // Front montant
+                if TCNT0 == OCR0A then                              // TOP = OCR0A
+                    switch (TCCR0A<7 .. 6>) {
+                        case 10 : OC0A<7 .. 0> = 0xFF;
+                        case 11 : OC0A<7 .. 0> = 0x00;
+                    };
+                    //ramp = 1;                                      // On bascule la ramp
+                else
+                    TCNT0 = TCNT0 + 0x01;                           // Incrémente de 1
+                endif;
+            else                                                    // Front descendant
+                if TCNT0 == OCR0A then                              // TOP = OCR0A
+                    switch (TCCR0A<7 .. 6>) {
+                        case 10 : OC0A<7 .. 0> = 0x00;
+                        case 11 : OC0A<7 .. 0> = 0xFF;
+                    };
+                    //ramp = 0;                                      // On bascule la ramp
+                else
+                    TCNT0 = TCNT0 - 0x01;                            // Incrémente de 1
+                endif;
+            endif;
+        endif;
+
+        if TCCR0A<1 .. 0> == 11 then                            // --- Mode CTC
+            if TCNT0 == OCR0A then                                   // TOP = OCR0A
+                TCNT0 = 0x00;
+                OC0A = ~OC0A;
+            else
+                if TCNT0 == 0xFF then                                // 255
+                    TCNT0 = 0x00;
+                else
+                    TCNT0 = TCNT0 + 0x01;                            // Incrémente de 1
+                endif;
+            endif;
+        endif;
+
+        if TCCR0A<1 .. 0> == 11 then                            // --- Mode Fast PWM
+            if TCNT0 == OCR0A then                                  // TOP = OCR0A
+                if TCCR0A<7 .. 6> == 10 then
+                    OC0A<7 .. 0> = 0xFF;
+                endif;
+                TCNT0 = 0x00;
+            else
+                TCNT0 = TCNT0 + 0x01;                               // Incrémente de 1
+            endif;
+            if TCNT0 == 0x00 then
+                 if TCCR0A<7 .. 6> == 11 then
+                    OC0A<7 .. 0> = 0x00;
+                endif;
+            endif;
+        endif;
+
+        // Traitement du registre B
+        if TCCR0B<1 .. 0> == 00 then                            // --- Mode normal 
+            if TCNT0 == 0xFF then                                   // 255
+                TIFR0<0 .. 0> = 1;
+            else
+                TCNT0 = TCNT0 + 0x01;                               // Incrémente de 1
+            endif;
+        endif;
+
+        if TCCR0B<1 .. 0> == 01 then                            // --- Mode PWM (Phase Correct)
+            if ramp == 0 then                                      // Front montant
+                if TCNT0 == OCR0B then                              // TOP = OCR0B
+                    switch (TCCR0B<7 .. 6>) {
+                        case 10 : OC0B<7 .. 0> = 0xFF;
+                        case 11 : OC0B<7 .. 0> = 0x00;
+                    };
+                    //ramp = 1;                                      // On bascule la ramp
+                else
+                    TCNT0 = TCNT0 + 0x01;                           // Incrémente de 1
+                endif;
+            else                                                    // Front descendant
+                if TCNT0 == OCR0B then                              // TOP = OCR0B
+                    switch (TCCR0B<7 .. 6>) {
+                        case 10 : OC0B<7 .. 0> = 0x00;
+                        case 11 : OC0B<7 .. 0> = 0xFF;
+                    };
+                    //ramp = 0;                                      // On bascule la ramp
+                else
+                    TCNT0 = TCNT0 - 0x01;                            // Incrémente de 1
+                endif;
+            endif;
+        endif;
+
+        if TCCR0B<1 .. 0> == 11 then                            // --- Mode CTC
+            if TCNT0 == OCR0B then                                   // TOP = OCR0B
+                TCNT0 = 0x00;
+                OC0B = ~OC0B;
+            else
+                if TCNT0 == 0xFF then                                // 255
+                    TCNT0 = 0x00;
+                else
+                    TCNT0 = TCNT0 + 0x01;                            // Incrémente de 1
+                endif;
+            endif;
+        endif;
+
+        if TCCR0B<1 .. 0> == 11 then                            // --- Mode Fast PWM
+            if TCNT0 == OCR0B then                                  // TOP = OCR0B
+                if TCCR0B<7 .. 6> == 10 then
+                    OC0B<7 .. 0> = 0xFF;
+                endif;
+                TCNT0 = 0x00;
+            else
+                TCNT0 = TCNT0 + 0x01;                               // Incrémente de 1
+            endif;
+            if TCNT0 == 0x00 then
+                 if TCCR0B<7 .. 6> == 11 then
+                    OC0B<7 .. 0> = 0x00;
+                endif;
+            endif;
+        endif;
+    }
