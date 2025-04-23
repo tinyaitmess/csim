@@ -31,6 +31,7 @@ make
 > Makefile principal *(ligne 63)* : `portd.h`  
 > csim-run.c *(ligne 41)* : `portd.h`  
 > loader.c   *(ligne 38)* : `portd.h`  
+> loader.c   *(ligne 47)* : `portd_component`
 
 Basculer sur dossier courant
 ```sh
