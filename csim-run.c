@@ -38,7 +38,10 @@
 
 #include "arm_core.h"
 
+/* Composants internes ATMEGA328P */
 #include "portd.h"
+#include "tc8bit0.h"
+
 
 /*#include "yaml.h"
 

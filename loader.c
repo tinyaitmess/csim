@@ -35,7 +35,10 @@
 #include "leds10.h"
 #include "timer.h"
 #include "arm_core.h"
+
+/* Composants internes ATMEGA328P */
 #include "portd.h"
+#include "tc8bit0.h"
 
 
 /**
@@ -50,6 +53,7 @@ csim_component_t *comps[] = {
 	&leds10_component,
 	&arm_component.comp,
 	&portd_component,
+	&tc8bit0_component,
 	NULL
 };
 
