@@ -23,18 +23,17 @@ reg DDRB [1, byte]
 
 port PORTB_PINS (8, bit)
     label = "Port B Pins"
-    offset = 0x23
     init = 0
     on_update = {
 	for i in 0 .. 7 do
 		if DDRB<i..i> == 1 then
-			PIN[i] = PORTB<i..i>;
+			PORTB_PINS[i] = PORTB<i..i>;
 		endif;
 	enddo;
     }
     on_input = {
 
 	if DDRB<__INDEX .. __INDEX> == 0 then
-		PORTB<__INDEX .. __INDEX> = PIN[__INDEX];
+		PORTB<__INDEX .. __INDEX> = PORTB_PINS[__INDEX];
 	endif;
         }

@@ -3,73 +3,127 @@ let arch = "ATmega328P"
 let license = "GPL"
 let io_comp = 1
 let copyright = "University of Toulouse 3"
-let date = "19/01/2025"
+let date = "06/04/2025"
 
-//type bit = card(1)
+type bit = card(1)
 type byte = card(8)
 
-reg TCNT0 [1, byte] 
+
+// -------------------------------------------------------
+// ----- Déclaration des registres
+// -------------------------------------------------------
+
+reg TCNT0 [1, byte]
     label = "Timer/Counter Register"
     offset = 0x46
-    init = { 0x00 }
-    on_write = {
-        // Code pour modifier la valeur du compteur 
-    }
-
-    on_read = {
-        // Code pour lire la valeur du compteur 
-    }
-
-
-reg TCCR0A [1, byte] 
-    // COM0A1 COM0A0 COM0B1 COM0B0 - - WGM01 WGM00 
+    init = 0x00
+    
+reg TCCR0A [1, byte]
+    // COM0A1 COM0A0 COM0B1 COM0B0 - - WGM01 WGM00
     label = "Timer/Counter Control Register A"
     offset = 0x44
-    init = { 0x00 }
+    init = 0x00
 
 
-reg TCCR0B [1, byte] 
-    // FOC0A FOC0B - - WGM02 CS02 CS01 CS00 
+reg TCCR0B [1, byte]
+    // FOC0A FOC0B - - WGM02 CS02 CS01 CS00
     label = "Timer/Counter Control Register B"
     offset = 0x45
-    init = { 0x00 }
+    init = 0x03
 
-
-reg OCR0A [1, byte] 
+reg OCR0A [1, byte]
     label = "Output Compare Register A"
     offset = 0x47
-    init = { 0x00 }
+    init = 0x00
 
-reg OCR0B [1, byte] 
+reg OCR0B [1, byte]
     label = "Output Compare Register B"
     offset = 0x48
-    init = { 0x00 }
+    init = 0x00
 
 reg TIFR0 [1, byte]
-    // - - - - - OCF0B OCF0A TOV0 
+    // - - - - - OCF0B OCF0A TOV0
     label = "Timer/Counter Interrupt Flag Register"
     offset = 0x35
-    read_only = 1
+    init = 0x00
 
-reg TIMSK0 [1, bye]
+reg TIMSK0 [1, byte]
     // - - - - - OCIE0B OCIE0A TOIE0
     label = "Timer/Counter Interrupt Mask Register"
     offset = 0x6E
-    init = { 0x00 }
+    init = 0x01
 
+// -------------------------------------------------------
+// ----- Registre interne : horloge logique
+// -------------------------------------------------------
 
+reg CLK [1, bit]
+    label = "Software Clock"
+    intern = 1
+    offset = 0x01
+    init = 0x00
 
-port OC0A (1, DIGITAL)
+// -------------------------------------------------------
+// ----- Déclaration des ports
+// -------------------------------------------------------
+
+port OC0A (1, bit)
     label = "Output Compare Pin A"
-    on_update = { // Code pour gérer la mise à jour de la broche de comparaison de sortie A
-    }
 
-port OC0B (1, DIGITAL)
+port OC0B (1, bit)
     label = "Output Compare Pin B"
-    on_update = { // Code pour gérer la mise à jour de la broche de comparaison de sortie B
+
+// -------------------------------------------------------
+// ----- Événement de mise à jour
+// -------------------------------------------------------
+
+event Update
+    on_update = {
+        // Lire les bits de mode
+        let wgm0 = TCCR0A<0 .. 0>; // WGM00
+        let wgm1 = TCCR0A<1 .. 1>; // WGM01
+
+        // Mode CTC = 0b010
+        if wgm1 == 1 && wgm0 == 0 then
+            if TCNT0 == OCR0A then
+                TIFR0<1 .. 1> = 1;       // Set OCF0A (Compare Match A)
+                TCNT0 = 0x00;       // Reset compteur
+                OC0A = TIFR0<1 .. 1>;    // Basculer OC0A si souhaité
+            else
+                TCNT0 = TCNT0 + 1;
+            endif;
+        else
+            // Mode Normal
+            if TCNT0 == 0xFF then
+                TIFR0<0 .. 0> = 1;       // Overflow
+                TCNT0 = 0x00;
+                OC0A = TIFR0<0 .. 0>;
+            else
+                TCNT0 = TCNT0 + 1;
+            endif;
+        endif;
+
+        schedule Update in 1;  // Planifier la prochaine mise à jour
     }
 
-event overflow_event
-    on_trigger = { // Code pour gérer le dépassement du timer
+    on_trigger = {
+        CLK = ~CLK;
     }
 
+// -------------------------------------------------------
+// ----- Lancement automatique au reset
+// -------------------------------------------------------
+
+event Reset
+    on_update = {
+        schedule Update in 1;
+    }
+
+// -------------------------------------------------------
+// ----- Reset du signal OC0A
+// -------------------------------------------------------
+
+//event ClearOC0A
+//    on_update = {
+//        OC0A = 0;
+//    }
