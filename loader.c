@@ -39,6 +39,7 @@
 /* Composants internes ATMEGA328P */
 #include "portd.h"
 #include "tc8bit0.h"
+#include "portb.h"
 
 
 /**
@@ -54,6 +55,7 @@ csim_component_t *comps[] = {
 	&arm_component.comp,
 	&portd_component,
 	&tc8bit0_component,
+	&portb_component,
 	NULL
 };
 
