@@ -1,0 +1,85 @@
+let component = "tc8bit0"
+let arch = "ATmega328P"
+let license = "GPL"
+let io_comp = 1
+let copyright = "University of Toulouse 3"
+let date = "19/01/2025"
+
+//type bit = card(1)
+type byte = card(8)
+
+
+reg TCCR1A [1, byte] 
+    //COM1A1 COM1A0 COM1B1 COM1B0 - - WGM11 WGM10
+    label = "Timer/Counter Control Register A"
+    offset = 0x80
+    init = { 0x00 }
+
+
+reg TCCR1B [1, byte] 
+    // ICNC1 ICES1 – WGM13 WGM12 CS12 CS11 CS10
+    label = "Timer/Counter Control Register B"
+    offset = 0x81
+    init = { 0x00 }
+
+reg TCCR1C [1, byte] 
+    // FOC1A FOC1B
+    label = "Timer/Counter Control Register C"
+    offset = 0x82
+    init = { 0x00 }
+
+reg TCNT1H [1, byte] 
+    label = "Timer/Counter "
+    offset = 0x85
+    init = { 0x00 }
+
+reg TCNT1L [1, byte] 
+    label = "Timer/Counter "
+    offset = 0x84
+    init = { 0x00 }
+
+
+reg OCR1AH [1, byte] 
+    label = "Output Compare Register A High"
+    offset = 0x89
+    init = { 0x00 }
+
+reg OCR1AL [1, byte] 
+    label = "Output Compare Register A Low"
+    offset = 0x88
+    init = { 0x00 }
+
+reg OCR1BH [1, byte] 
+    label = "Output Compare Register B High"
+    offset = 0x8B
+    init = { 0x00 }
+
+reg OCR1BL [1, byte] 
+    label = "Output Compare Register B Low"
+    offset = 0x8A
+    init = { 0x00 }
+
+reg OCR1H [1, byte] 
+    label = "Input Capture Register High"
+    offset = 0x87
+    init = { 0x00 }
+
+reg OCR1L [1, byte] 
+    label = "Input Capture Register Low"
+    offset = 0x86
+    init = { 0x00 }
+
+
+reg TIMSK1 [1, byte]
+    // - - ICIE1 - - OCIE1B OCIE1A TOIE1
+    label = "Timer/Counter Interrupt Mask Register"
+    offset = 0x6F
+    read_only = 1
+
+reg TIFR1 [1, bye]
+    // - - ICF1 - - OCF1B OCF1A TOV1
+    label = "Timer/Counter Interrupt Flag Register"
+    offset = 0x36
+    init = { 0x00 }
+
+let wgm = (TCCR1B <4..3> << 2 | TCCR1A <1..0>);
