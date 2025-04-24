@@ -77,28 +77,13 @@ port OC0B (1, bit)
 
 event Update
     on_update = {
-        // Lire les bits de mode
-        let wgm0 = TCCR0A<0 .. 0>; // WGM00
-        let wgm1 = TCCR0A<1 .. 1>; // WGM01
-
-        // Mode CTC = 0b010
-        if wgm1 == 1 && wgm0 == 0 then
-            if TCNT0 == OCR0A then
-                TIFR0<1 .. 1> = 1;       // Set OCF0A (Compare Match A)
-                TCNT0 = 0x00;       // Reset compteur
-                OC0A = TIFR0<1 .. 1>;    // Basculer OC0A si souhaité
-            else
-                TCNT0 = TCNT0 + 1;
-            endif;
+        // Mode Normal
+        if TCNT0 == 255 then       // 255
+            TIFR0<0 .. 0> = 1;       // Overflow
+            TCNT0 = 0;           // 0
+            OC0A = TIFR0<0 .. 0>;
         else
-            // Mode Normal
-            if TCNT0 == 0xFF then
-                TIFR0<0 .. 0> = 1;       // Overflow
-                TCNT0 = 0x00;
-                OC0A = TIFR0<0 .. 0>;
-            else
-                TCNT0 = TCNT0 + 1;
-            endif;
+            TCNT0 = TCNT0 + 1;
         endif;
 
         schedule Update in 1;  // Planifier la prochaine mise à jour
