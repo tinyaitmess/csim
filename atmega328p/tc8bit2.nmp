@@ -1,4 +1,4 @@
-let component = "tc8bit0"
+let component = "tc8bit2"
 let arch = "ATmega328P"
 let license = "GPL"
 let io_comp = 1

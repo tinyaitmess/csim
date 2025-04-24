@@ -1,7 +1,7 @@
 GLISS = ../gliss/gep/gliss-csim
 CFLAGS = -I.. -g
 
-NMPS = portb.nmp
+NMPS = tc8bit0.nmp
 
 
 all: libatmega328p.a
