@@ -7,6 +7,7 @@ let date = "19/01/2025"
 
 type bit = card(1)
 type byte = card(8)
+type word = card(16)
 
 
 reg TCCR1A [1, byte] 
@@ -91,6 +92,12 @@ reg CLK [1,bit]
     offset = 0x01
     init = 0
 
+reg OC1A [1,bit]
+    label = "Output Compare A"
+    offset = 0x03
+    output = 1
+    init = 0
+
 
 
 event Update
@@ -98,7 +105,8 @@ event Update
         let wgm = (TCCR1B <4..3> << 2 | TCCR1A <1..0>);
         let cs1 = TCCR1B <2..0>;
         let prescaler =0 ;
-
+        let OCIE1A = TIMSK1 <1..1>;
+        if OCIE1A == 1 then cancel Update ; endif;
         switch (cs1) {
             case 0b001 : prescaler = 1;
             case 0b010 : prescaler = 8;
@@ -127,6 +135,12 @@ event Update
             case 0b0100 :
                 let tcnt1 = (TCNT1H << 8) | TCNT1L;
                 let ocr1a = (OCR1AH << 8) | OCR1AL;
+                let com1a = TCCR1A <7..6>;
+                switch (com1a) {
+                        case 0b01: OC1A = ~OC1A; // toggle
+                        case 0b10: OC1A = 0;     // clear
+                        case 0b11: OC1A = 1;     // set
+                    };
                 if tcnt1 == ocr1a then
                     tcnt1 =0;
                     TCNT1H = 0x00;

@@ -1,0 +1,16 @@
+name: test_tc16bit1
+components:
+  CORE:
+    type: arm
+  LED:
+    type: led
+    base: 0xA0000000
+  
+  Timer1:
+    type: tc16bit1
+    base: 0xFF201000
+
+connect:
+  - 
+    from: Timer1.OCR1AH
+    to: LED.input
