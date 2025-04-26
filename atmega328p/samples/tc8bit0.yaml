@@ -8,7 +8,3 @@ components:
   TC8BIT0:
     type: tc8bit0
     base: 0xFF202000
-connect:
-  - 
-    from: TC8BIT0.OC0A
-    to: LED.input

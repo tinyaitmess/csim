@@ -1,46 +1,47 @@
-## Génération des fichiers à partir de GPIO
+## Generation of Files
 
-Pour générer les fichiers des composants, utilisez la commande suivante :
+To generate the component files, use the following command:
 
 ```sh
 make
 ```
 
-*Ceci génère les fichiers aux formats `.c` et `.h` des divers composants déclarés dans la variable `NMPS` du `Makefile` et les fichiers `.elf` dans le dossier `samples`. Les fichiers `.c` et `.h` sont automatiquement déplacés dans le répertoire principal de csim.*
+*This generates the `.c` and `.h` files for the various components declared in the `NMPS` variable of the `Makefile`, and the `.elf` files in the `samples` folder. The `.c` and `.h` files are automatically moved to the main directory of `csim`.*
 
 ---
 
-## Génération des fichiers de test pour `portd`
+## Generation of Test Files for `portd`
 
-Accédez au dossier `samples` et exécutez :
+Go to the `samples` folder and execute:
 
 ```sh
 cd samples
 make
 ```
 
-*Ceci génère les fichiers de test pour `portd`.*
+*This generates the test files for `portd`.*
 
 ---
 
-## Tester avec l'environnement csim
+## Testing with the csim Environment
 
-> **Remarque :**  
-> Il faut ajouter les déclarations des fichiers générés du composant (ex: `portd`):  
-> Makefile principal *(ligne 7)* : `portd.c`  
-> Makefile principal *(ligne 63)* : `portd.h`  
-> csim-run.c *(ligne 41)* : `portd.h`  
-> loader.c   *(ligne 38)* : `portd.h`  
-> loader.c   *(ligne 47)* : `portd_component`
+> **Note:**  
+> You need to add the declarations of the generated files for the component (e.g., `portd`):  
+> Main Makefile *(line 7)*: `portd.c`  
+> Main Makefile *(line 63)*: `portd.h`  
+> csim-run.c *(line 41)*: `portd.h`  
+> loader.c   *(line 38)*: `portd.h`  
+> loader.c   *(line 47)*: `portd_component`
 
-Basculer sur dossier courant
+Switch to the current folder:
+
 ```sh
 ./csim-run atmega328p/samples/test_portd.elf -b atmega328p/samples/test_portd.yaml
 ```
 
-## Réinitialisation du dossier `atmega328p`
+## Resetting the `atmega328p` Folder
 
-Pour nettoyer les fichiers générés et rétablir l'état initial du dossier, utilisez :
+To clean up the generated files and restore the initial state of the folder, use:
 
 ```sh
 make clean
