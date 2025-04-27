@@ -3,11 +3,10 @@ let arch = "ATmega328P"
 let license = "GPL"
 let io_comp = 1
 let copyright = "University of Toulouse 3"
-let date = "19/01/2025"
+let date = "27/04/2025"
 
 type bit = card(1)
 type byte = card(8)
-type word = card(16)
 
 
 reg TCCR1A [1, byte] 
@@ -98,94 +97,186 @@ reg OC1A [1,bit]
     output = 1
     init = 0
 
+reg OC1B [1,bit]
+    label = "Output Compare B"
+    offset = 0x04
+    output = 1
+    init = 0
 
+reg COUNT_DIR [1, bit]
+    label = "Timer Count Direction"
+    intern = 1
+    offset = 0x05
+    init = 0 
 
 event Update
-    on_update = {
+    on_trigger={
         let wgm = (TCCR1B <4..3> << 2 | TCCR1A <1..0>);
         let cs1 = TCCR1B <2..0>;
+        let com1a = TCCR1A <7..6>;
         let prescaler =0 ;
-        let OCIE1A = TIMSK1 <1..1>;
-        if OCIE1A == 1 then cancel Update ; endif;
+
+        let top = 0xFFFF;
+        let ocr1a = (OCR1AH << 8) | OCR1AL;
+        let ocr1b = (OCR1BH << 8) | OCR1BL;
+        let icr1 = (ICR1H<< 8) | ICR1L;
+
         switch (cs1) {
             case 0b001 : prescaler = 1;
             case 0b010 : prescaler = 8;
             case 0b011 : prescaler = 64;
             case 0b100 : prescaler = 256;
             case 0b101 : prescaler = 1024;
-//            default : cancel Update;
+//            default : cancel update;
         };
+
+        let mode_type = 0; // 0: NORMAL, 1: CTC, 2: PWM, 3: FAST_PWM
         
-        switch (wgm) {
-            //MODE NORMAL
-            case 0b0000 : 
-                let tcnt1 = (TCNT1H << 8) | TCNT1L;
-                if tcnt1 == 0xFFFF then 
-                    tcnt1 = 0;
-                    TCNT1H = 0x00;
-                    TCNT1L = 0x00;
-                    TIFR1<0..0>=1; // overflow
-                else
-                    tcnt1 = tcnt1 + 1;
-                    TCNT1H = (tcnt1 >> 8);
-                    TCNT1L = (tcnt1 & 0xFF);
-                endif;
 
-            // MODE CTC ocr1a
-            case 0b0100 :
-                let tcnt1 = (TCNT1H << 8) | TCNT1L;
-                let ocr1a = (OCR1AH << 8) | OCR1AL;
-                let com1a = TCCR1A <7..6>;
-                switch (com1a) {
-                        case 0b01: OC1A = ~OC1A; // toggle
-                        case 0b10: OC1A = 0;     // clear
-                        case 0b11: OC1A = 1;     // set
-                    };
-                if tcnt1 == ocr1a then
-                    tcnt1 =0;
-                    TCNT1H = 0x00;
-                    TCNT1L = 0x00;
-                    TIFR1<0..0>=1; // overflow
-                else
-                    tcnt1 = tcnt1 +1 ;
-                    TCNT1H = (tcnt1 >> 8);
-                    TCNT1L = (tcnt1 & 0xFF);
-                endif;
+        if (wgm == 0b0000) then
+            mode_type = 0; // NORMAL
+        else 
+            if (wgm == 0b0100 || wgm == 0b1100) then 
+                mode_type = 1; // CTC
+        
+            else    
+                if (wgm == 0b0001 || wgm == 0b0010 || wgm == 0b0011 || wgm == 0b1000 || wgm == 0b1001|| wgm == 0b1010 || wgm == 0b1011) then
+                    mode_type = 2; // PWM Phase Correct
             
-            // MODE CTC ICR1
-            case 0b1100 :
-                let tcnt1 = (TCNT1H << 8) | TCNT1L;
-                let icr1 = (ICR1H<< 8) | ICR1L;
-                if tcnt1 == icr1 then
-                    tcnt1 =0;
-                    TCNT1H = 0x00;
-                    TCNT1L = 0x00;
-                    TIFR1<0..0>=1; // overflow
-                else
-                    tcnt1 = tcnt1 +1 ;
-                    TCNT1H = (tcnt1 >> 8);
-                    TCNT1L = (tcnt1 & 0xFF);
+                else 
+                    if (wgm == 0b0101 || wgm == 0b0110 || wgm == 0b0111 || wgm == 0b1110 || wgm == 0b1111) then
+                        mode_type = 3; // FAST PWM
+                
+                    else 
+                        mode_type = 0; // fallback (par sécurité)
+                    endif;
                 endif;
-//            default :
-//                return;
+            endif;
+        endif;
+
+        // choix de la valeur de TOP
+        switch (wgm) {
+            case 0b0001 : // Pwm 8-bit
+                top = 0x00FF;
+            case 0b0101: // Pwm 8-bit
+                top = 0x00FF;
+            case 0b0010 : // Pwm 9-bit
+                top = 0x01FF;
+            case 0b0110 : // Pwm 9-bit
+                top = 0x01FF;
+
+            case 0b0011 : // Pwm 10-bit
+                top = 0x03FF;
+            case 0b0111: // Pwm 10-bit
+                top = 0x03FF;
+            case 0b1010 : 
+                top = icr1;
+            case 0b1110 : 
+                top = icr1;
+            case 0b1100: 
+                top = icr1;
+
+            case 0b1011 : 
+                top = ocr1a;
+            case 0b1111 : 
+                top = ocr1a;
+            case 0b0100: 
+                top = ocr1a;
+            default : top = 0xFFFF; //mode normal
         };
-        schedule Update in prescaler;
+
+
+        let tcnt1 = (TCNT1H << 8) | TCNT1L;
+
+        switch (mode_type){
+            // mode NORMAL
+            case 0 :
+                if tcnt1 == top then
+                    tcnt1 =0 ;
+                    TIFR1<0..0>=1;
+                else 
+                    tcnt1 = tcnt1 + 1;
+                endif;
+            // mode CTC 
+            case 1 :
+                if tcnt1 == top then
+                    tcnt1 = 0;
+                    TIFR1<0..0>=1;
+                    if wgm == 0b0100 then
+                        TIFR1<1..1>=1; // CTC MAJ OCF1A
+                        switch (com1a) {
+                            case 0b01: OC1A = ~OC1A; // toggle
+                            case 0b10: OC1A = 0;     // clear
+                            case 0b11: OC1A = 1;     // set
+                        };
+                    else
+                        TIFR1<5..5>=1; // CTC ICR1 
+                    endif;
+                endif;
+            // mode FAST mode
+            case 2 :
+                if tcnt1 == top then
+                    tcnt1 =0;
+                    TIFR1<0..0> = 1;
+                    if top == ocr1a then
+                        TIFR1<1..1>=1; // CTC OCF1A
+                        switch (com1a) {
+                            case 0b01: OC1A = ~OC1A; // toggle
+                            case 0b10: OC1A = 0;     // clear
+                            case 0b11: OC1A = 1;     // set
+                        };
+                    else
+                        if top == icr1 then
+                            TIFR1<5..5> = 1; // ICR1 mis à 1 au moment du match
+                        endif;
+
+                    endif;
+
+                else 
+                    tcnt1 = tcnt1 + 1;
+                endif;
+
+            // mode PWM up and down
+            case 3 :
+                if tcnt1 == top then
+                    COUNT_DIR = 0;
+                    
+                    if top == ocr1a then
+                        TIFR1<1..1> = 1; // OCF1A mis à 1 au moment du match
+                        switch (com1a){
+                            case 0b01 : OC1A = ~OC1A;
+                            case 0b10 : OC1A = 1;
+                            case 0b11 : OC1A = 0;
+                        };
+                    else 
+                        if top == icr1 then
+                            TIFR1<5..5> = 1; // ICF1 mis à 1 au moment du match
+                        endif;
+                    endif;
+
+                else 
+                    if tcnt1 == 0 then
+                        COUNT_DIR = 1;
+                        TIFR1<0..0> = 1; //overflow
+                        if top == ocr1a then
+                        switch (com1a){
+                            case 0b10 : OC1A = 0;
+                            case 0b11 : OC1A = 1;
+                        };
+                        endif;
+                    endif;
+                        
+                endif;
+
+                if COUNT_DIR == 1 then
+                    tcnt1 = tcnt1 + 1;
+                else
+                    tcnt1 = tcnt1 - 1;
+                endif;
+        };
+        TCNT1H = (tcnt1 >> 8);
+        TCNT1L = (tcnt1 & 0xFF);
+
+        schedule Update in prescaler ;
 
     }
-
-    on_trigger = {
-        CLK = ~CLK;
-    }
-
-// -------------------------------------------------------
-// ----- Lancement automatique au reset
-// -------------------------------------------------------
-
-event Reset
-    on_update = {
-        schedule Update in 1;
-    }
-
-// -------------------------------------------------------
-// ----- Reset du signal OC0A
-// -------------------------------------------------------

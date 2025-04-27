@@ -6,7 +6,7 @@ components:
     type: led
     base: 0xA0000000
   
-  Timer1:
+  TC16BIT1:
     type: tc16bit1
     base: 0xFF201000
 

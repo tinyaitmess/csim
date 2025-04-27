@@ -29,23 +29,30 @@ _start :
     add     R6, R1, #TIFR1      // R6 = adresse de TIFR1
     add     R7, R1, #TIMSK1     // R7 = adresse de TIMSK1
 
-    // Configuration du Timer1 en mode CTC
-    mov     R10, #0x00          // TCCR1A = 0 (aucune action sur OC1A)
-    strb    R10, [R2]           // Écrire dans TCCR1A
+    //mode normal initialisation
+    mov r8, #0x00
+    strb r8, [r2]
+    add r8,r8, #1
+    strb r8, [r3]
 
-    mov     R10, #0b00001011    // TCCR1B = 0b00001011 : Mode CTC, prescaler 1024
-    strb    R10, [R3]           // Écrire dans TCCR1B
+_init :
+    ldrb r9, [r6] // verification du flag TOV1
+    cmp r9, r8
+    bne _off
+    b _on
 
-    // Définir OCR1A pour définir la valeur de comparaison (ici OCR1A = 0x100)
-    mov     R10, #0x01          // OCR1AH = 0x01 (High)
-    strb    R10, [R4]           // Écrire dans OCR1AH
-    mov     R10, #0x00          // OCR1AL = 0x00 (Low)
-    strb    R10, [R5]           // Écrire dans OCR1AL
+_on :
+    mov r10,#1
+  //  cmp r9
+   // b _on
+   b _exit
 
-    // Configurer l'interruption pour le match de comparaison
-    mov     R10, #0b00000010    // OCIE1A = 1 (interruption sur comparaison A)
-    strb    R10, [R7]           // Écrire dans TIMSK1
 
+_off :
+    mov r10,#0
+    cmp r9, r0
+    beq _on
+    b _off
 
 _exit:
     b       _exit  

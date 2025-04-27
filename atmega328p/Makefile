@@ -3,7 +3,6 @@ CFLAGS = -I.. -g
 
 NMPS = tc16bit1.nmp
 
-
 all: libatmega328p.a
 
 clean:
