@@ -4,7 +4,7 @@
 YAML=$(PWD)/easy-yaml
 
 HEADERS=csim.h
-COMPONENTS= seven_seg_controller.c seven_seg_display.c led.c button.c leds10.c leds10.c timer.c portd.c tc8bit0.c portb.c tc16bit1.c
+COMPONENTS= seven_seg_controller.c seven_seg_display.c led.c button.c leds10.c leds10.c timer.c portd.c portb.c portc.c tc8bit0.c tc16bit1.c
 SOURCES=csim.c yaml.c  csim-rt.o arm_core.c loader.c $(COMPONENTS)
 
 CFLAGS=-g3 -Wall -fPIC -I. -DCOMPAT

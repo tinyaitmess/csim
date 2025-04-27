@@ -37,9 +37,10 @@
 #include "arm_core.h"
 
 /* Composants internes ATMEGA328P */
+#include "portb.h"
+#include "portc.h"
 #include "portd.h"
 #include "tc8bit0.h"
-#include "portb.h"
 
 
 /**
@@ -53,9 +54,10 @@ csim_component_t *comps[] = {
 	&seven_seg_display_component.comp,
 	&leds10_component,
 	&arm_component.comp,
+	&portb_component,
+	&portc_component,
 	&portd_component,
 	&tc8bit0_component,
-	&portb_component,
 	NULL
 };
 

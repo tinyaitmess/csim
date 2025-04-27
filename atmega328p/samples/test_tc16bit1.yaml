@@ -10,7 +10,3 @@ components:
     type: tc16bit1
     base: 0xFF201000
 
-connect:
-  - 
-    from: Timer1.OCR1AH
-    to: LED.input
