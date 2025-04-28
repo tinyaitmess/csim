@@ -1,7 +1,7 @@
 GLISS = ../gliss/gep/gliss-csim
 CFLAGS = -I.. -g
 
-NMPS = tc8bit0.nmp
+NMPS = oscillator.nmp
 
 
 all: libatmega328p.a

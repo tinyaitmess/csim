@@ -41,6 +41,7 @@
 #include "portc.h"
 #include "portd.h"
 #include "tc8bit0.h"
+#include "oscillator.h"
 
 
 /**
@@ -58,6 +59,7 @@ csim_component_t *comps[] = {
 	&portc_component,
 	&portd_component,
 	&tc8bit0_component,
+	&oscillator_component,
 	NULL
 };
 

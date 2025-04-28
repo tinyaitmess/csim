@@ -43,6 +43,7 @@
 #include "portc.h"
 #include "portd.h"
 #include "tc8bit0.h"
+#include "oscillator.h"
 
 
 /*#include "yaml.h"
